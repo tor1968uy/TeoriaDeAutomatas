@@ -1,0 +1,65 @@
+"""##### **Ejercicio 2 - Generador de palabras válidas**
+
+**Descripción del problema**
+
+Queremos crear un generador aleatorio de palabras que pertenezcan al lenguaje definido por la expresión regular:
+
+```regex
+a*b*
+```
+$$ \text{Esto representa palabras con todos los } ``a" \text{ al principio y luego todos los } ``b" \text{ (cero o más de cada uno).}$$
+
+**Objetivo**
+- Generar y mostrar palabras aleatorias válidas.
+- Comparar con la expresión regular para validar.
+
+**Entradas**
+- Cantidad de palabras a generar.
+
+**Salidas**
+- Lista de palabras generadas y su verificación.
+
+**Instrucciones**
+1. Escribí una función que genere cadenas con estructura: `"a"*n + "b"*m`.
+2. Usá números aleatorios para $n$, $m$.
+3. Verificá cada palabra con la expresión regular.
+"""
+
+import re
+import random
+
+expresion_regular = r"a*b*"
+
+def generar_palabra_a_n_b_m():
+    # Genera una cadena con la estructura "a"*n + "b"*m, donde n y m son aleatorios.
+    n = random.randint(0, 10)  # Longitud aleatoria de la parte 'a' (0 a 10)
+    m = random.randint(0, 10)  # Longitud aleatoria de la parte 'b' (0 a 10)
+    return "a" * n + "b" * m
+
+def verificar_palabra(palabra):
+    if re.fullmatch(expresion_regular, palabra):
+        return f"La palabra '{palabra}' es válida ✅"
+    else:
+        return f"La palabra '{palabra}' no pertenece al lenguaje ❌"
+
+def generar_y_verificar_palabras(cantidad):
+    #Genera una lista de palabras aleatorias y las verifica con la expresión regular.
+    resultados = []
+    for i in range(cantidad):
+        palabra = generar_palabra_a_n_b_m()
+        resultado = verificar_palabra(palabra)
+        resultados.append(resultado)
+        palabra = palabra[::-1]
+        resultado = verificar_palabra(palabra)
+        resultados.append(resultado)
+    return resultados
+
+# Entradas
+cantidad_palabras = int(input(" Ingrese Cantidad de Palabras "))
+
+# Salidas
+resultados_verificacion = generar_y_verificar_palabras(cantidad_palabras)
+
+print("Resultados de la verificación:")
+for resultado in resultados_verificacion:
+    print(resultado)
