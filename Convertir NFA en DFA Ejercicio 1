@@ -1,0 +1,176 @@
+"""##### **Ejercicio 2 - Conversión de un NFA arbitrario a un DFA**
+
+**Descripción del problema**
+
+Queremos construir un programa en Python que permita convertir un autómata finito no determinista (NFA) en un autómata finito determinista (DFA) utilizando el método de subconjuntos. Para ello, trabajaremos con un NFA arbitrario que incluya transiciones múltiples (para un mismo símbolo desde un mismo estado) y también transiciones vacías (es decir, la ausencia de transición para ciertos casos).
+
+**Objetivo**
+- Implementar el algoritmo de conversión de NFA a DFA.
+- Generar la salida del DFA en formato crudo y tabla legible.
+- Comprender cómo el método de subconjuntos transforma el comportamiento no determinista en determinismo.
+
+**Requisitos para el NFA**
+- Define un NFA con al menos 4 estados.
+- Asegúrate de incluir:
+  - Múltiples transiciones desde un mismo estado con el mismo símbolo.
+  - Transiciones no definidas (vacías) para ciertos símbolos.
+
+**Instrucciones:**
+1. Define manualmente un NFA con las características indicadas.
+2. Utiliza el código de ejemplo proporcionado (o modifícalo si es necesario) para realizar la conversión de tu NFA a un DFA.
+3. Asegúrate de que la salida incluya:
+  - La lista de estados DFA crudos, numerados como D0, D1, etc.
+  - Una tabla de transiciones del DFA generada de forma clara.
+4. Verifica **manualmente** si el DFA obtenido es equivalente al NFA original. Para ello:
+  - Elige algunas palabras que sabes que deberían ser aceptadas o rechazadas por el NFA.
+  - Comprueba si el DFA acepta o rechaza correctamente las mismas palabras.
+5. Reflexiona: ¿Qué observás sobre la cantidad de estados generados en el DFA? ¿Hay redundancias? ¿El comportamiento es el mismo?
+
+**Nota**: La numeración de los estados DFA (D0, D1, ...) puede variar según el orden de procesamiento.
+Los resultados deben coincidir salvo una permutación en los nombres de los estados.
+"""
+
+
+
+"""#### **Parte 3: Minimización de un DFA**
+
+Ahora queremos minimizar un DFA eliminando estados equivalentes e inaccesibles.
+
+##### **Ejercicio 3 - Análisis de un algoritmo de minimización de DFA**
+
+**Descripción del problema**
+
+Queremos estudiar cómo funciona un algoritmo completo para **minimizar un autómata finito determinista (DFA)**. Este algoritmo realiza tres tareas principales:
+
+1. Elimina estados inaccesibles
+2. Agrupa estados equivalentes
+3. Reconstruye un nuevo DFA mínimo
+
+Tu tarea no es programar desde cero, sino **leer el código proporcionado** y **entender cómo se aplican estos pasos teóricos**.
+
+**Objetivo**
+- Comprender cómo funciona una implementación real de minimización de DFA.
+- Identificar en el código dónde y cómo se aplican los pasos teóricos.
+- Mejorar la habilidad de leer y razonar sobre código.
+
+**Instrucciones:**
+1. Lee cuidadosamente el código que se proporciona a continuación.
+
+2. Responde las siguientes preguntas de forma clara y razonada:
+
+  - ¿Cómo identifica el código los estados redundantes (equivalentes)?
+
+  - ¿Cómo verifica que las simplificaciones no hayan creado nuevos grupos de estados redundantes?
+  
+  - ¿Cómo detecta y elimina el código los estados inaccesibles?
+
+3. Finalmente, explica:
+
+  - ¿Por qué es importante minimizar un DFA en contextos reales?
+
+  - ¿Qué ventajas ves en este tipo de implementación?
+"""
+
+from collections import defaultdict
+
+# Paso 1: Eliminar estados inaccesibles
+def eliminar_estados_inaccesibles(estados, transiciones, estado_inicial, alfabeto):
+    accesibles = set()
+    pendientes = [estado_inicial]
+
+    while pendientes:
+        actual = pendientes.pop()
+        if actual not in accesibles:
+            accesibles.add(actual)
+            for simbolo in alfabeto:
+                destino = transiciones.get((actual, simbolo))
+                if destino:
+                    pendientes.extend(destino)
+
+    # Filtrar estados y transiciones
+    nuevos_estados = {e for e in estados if e in accesibles}
+    nuevas_transiciones = {
+        (o, s): d for (o, s), d in transiciones.items()
+        if o in accesibles and list(d)[0] in accesibles
+    }
+    return nuevos_estados, nuevas_transiciones
+
+# Paso 2: Minimización del DFA usando particiones refinadas
+def minimizar_dfa(estados, alfabeto, transiciones, estado_inicial, estados_aceptacion):
+    # Primero eliminamos estados inaccesibles
+    estados, transiciones = eliminar_estados_inaccesibles(estados, transiciones, estado_inicial, alfabeto)
+
+    # Partición inicial: estados de aceptación vs no aceptación
+    no_finales = estados - estados_aceptacion
+    particion = [estados_aceptacion.copy(), no_finales.copy()]
+    nueva_particion = []
+
+    # Refinar la partición hasta que no cambie más
+    while True:
+        for grupo in particion:
+            subdivisiones = defaultdict(set)
+            for estado in grupo:
+                firma = []
+                for simbolo in alfabeto:
+                    destino = list(transiciones.get((estado, simbolo), ["#"]))[0]
+                    for i, g in enumerate(particion):
+                        if destino in g:
+                            firma.append(i)
+                            break
+                    else:
+                        firma.append(-1)
+                subdivisiones[tuple(firma)].add(estado)
+            nueva_particion.extend(subdivisiones.values())
+        if nueva_particion == particion:
+            break
+        particion = nueva_particion
+        nueva_particion = []
+
+    # Renombrar los grupos como P0, P1, ...
+    estado_repr = {estado: f"P{i}" for i, grupo in enumerate(particion) for estado in grupo}
+    trans_min = {}
+    for (origen, simbolo), destino in transiciones.items():
+        o, d = estado_repr[origen], estado_repr[list(destino)[0]]
+        trans_min[(o, simbolo)] = {d}
+
+    nuevos_estados = set(estado_repr.values())
+    nuevo_inicial = estado_repr[estado_inicial]
+    nuevos_finales = {estado_repr[e] for e in estados_aceptacion}
+
+    return nuevos_estados, trans_min, nuevo_inicial, nuevos_finales
+
+# ----------------------------------------
+# Entrada del DFA original (no minimizado)
+# ----------------------------------------
+estados = {"q0", "q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8"}
+alfabeto = {"0", "1"}
+estado_inicial = "q0"
+estados_aceptacion = {"q8"}
+transiciones = {
+    ("q0", "0"): {"q1"}, ("q0", "1"): {"q2"},
+    ("q1", "0"): {"q3"}, ("q1", "1"): {"q4"},
+    ("q2", "0"): {"q5"}, ("q2", "1"): {"q6"},
+    ("q3", "0"): {"q3"}, ("q3", "1"): {"q3"},
+    ("q4", "0"): {"q3"}, ("q4", "1"): {"q3"},
+    ("q5", "0"): {"q7"}, ("q5", "1"): {"q8"},
+    ("q6", "0"): {"q8"}, ("q6", "1"): {"q7"},
+    ("q7", "0"): {"q7"}, ("q7", "1"): {"q7"},
+    ("q8", "0"): {"q8"}, ("q8", "1"): {"q8"}
+}
+
+# Ejecutar la minimización
+nuevos_estados, trans_min, nuevo_inicial, nuevos_finales = minimizar_dfa(
+    estados, alfabeto, transiciones, estado_inicial, estados_aceptacion
+)
+
+# Mostrar resultados
+print("Estados del DFA minimizado:", nuevos_estados)
+print("Estado inicial:", nuevo_inicial)
+print("Estados de aceptación:", nuevos_finales)
+print("\nTabla de transiciones:")
+print(f"{'Estado':<8} | {'0':<5} | {'1':<5}")
+print("-" * 26)
+for estado in sorted(nuevos_estados):
+    destino_0 = list(trans_min.get((estado, "0"), {"∅"}))[0]
+    destino_1 = list(trans_min.get((estado, "1"), {"∅"}))[0]
+    print(f"{estado:<8} | {destino_0:<5} | {destino_1:<5}")
