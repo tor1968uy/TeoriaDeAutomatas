@@ -1,0 +1,118 @@
+"""##### **Ejemplo 3: Simulación de una gramática**
+
+**Descripción del problema:**
+
+Queremos generar palabras a partir de una gramática formal que define el lenguaje $a^nb^n$.
+
+**Objetivo:**
+- Implementar reglas de producción recursivas.
+- Mantener equilibrio entre 'a's y 'b's en cada palabra
+"""
+
+def generar_gramatica(n):
+    if n == 0:
+        return [""]
+    else:
+        palabras_menores = generar_gramatica(n-1)
+        return ["a" + p + "b" for p in palabras_menores]
+
+# Ejemplo de uso
+n = 3
+palabras = generar_gramatica(n)
+print(palabras)  # ['aaabbb']
+
+"""##### **Ejercicio 3: Implementar una nueva gramática**
+
+**Descripción del problema:**
+
+Modificar la regla de producción anterior para que la gramática genere palabras con 'a's y 'b's en cualquier orden, permitiendo diferentes cantidades de 'a's y 'b's en cada palabra generada.
+
+**Instrucciones adicionales:**
+- Antes de escribir el código, define claramente cuál será tu nueva regla de producción recursiva.
+- Implementa tu regla en Python siguiendo una estructura similar al código original.
+
+**Ejemplo de entrada y salida esperada:**
+
+Entrada:
+```python
+n = 2
+```
+
+Salida esperada (aproximada):
+```python
+['ba', 'ab', 'bb', 'aa']
+```
+
+Nota: La salida puede variar según cómo definas tu regla de producción, pero debe incluir diferentes combinaciones de 'a's y 'b's.
+"""
+
+## Ejercicio 3
+# ##########################################################################################################
+
+# Función para generar palabras con 'a's y 'b's en cualquier orden
+# Gramática original: Genera palabras con la forma a^n b^n (igual cantidad de 'a's y 'b's)
+def generar_gramatica_original(n):
+    # Caso base: si n es 0, devuelve una lista con la palabra vacía
+    if n == 0:
+        return [""]
+    else:
+        # Llamada recursiva para generar palabras más pequeñas
+        palabras_menores = generar_gramatica_original(n - 1)
+
+        # Creamos una lista vacía para almacenar las nuevas palabras generadas
+        nuevas_palabras = []
+
+        # Recorremos cada palabra en la lista de palabras más pequeñas (palabras_menores)
+        for palabra in palabras_menores:
+            # Construimos una nueva palabra añadiendo 'a' al principio y 'b' al final
+            nueva_palabra = "a" + palabra + "b"
+
+            # Añadimos la nueva palabra a la lista de nuevas_palabras
+            nuevas_palabras.append(nueva_palabra)
+
+        # Devuelve las nuevas palabras generadas
+        return nuevas_palabras
+
+
+# Nueva gramática (gramatica2): Genera palabras con 'a's y 'b's en cualquier orden
+def generar_gramatica2(n):
+    # Caso base: si n es 0, devuelve una lista con la palabra vacía
+    if n == 0:
+        return [""]
+    else:
+        # Llamada recursiva para generar palabras más pequeñas
+        palabras_menores = generar_gramatica2(n - 1)
+
+        # Creamos una lista vacía para almacenar las nuevas palabras
+        nuevas_palabras = []
+
+        # Recorremos cada palabra más pequeña
+        for palabra in palabras_menores:
+            # Añadimos 'a' al principio de la palabra
+            nuevas_palabras.append("a" + palabra)
+            # Añadimos 'b' al principio de la palabra
+            nuevas_palabras.append("b" + palabra)
+            # Añadimos 'a' al final de la palabra
+            nuevas_palabras.append(palabra + "a")
+            # Añadimos 'b' al final de la palabra
+            nuevas_palabras.append(palabra + "b")
+
+        # Devuelve las nuevas palabras generadas
+        return nuevas_palabras
+
+
+# Ejemplo de uso de la gramática original
+# n_original = 3
+# palabras_original = generar_gramatica_original(n_original)
+# print("Gramática original (a^n b^n):", palabras_original)
+
+# Ejemplo de uso de la nueva gramática (gramatica2)
+n_nuevo = 2
+palabras_nuevas = generar_gramatica2(n_nuevo)
+# Convertir la lista en un set para eliminar duplicados
+palabras_unicas_set = set(palabras_nuevas)
+
+# Convertir el set de vuelta a una lista
+palabras_unicas = list(palabras_unicas_set)
+
+print("Nueva gramática (a's y b's en cualquier orden):", palabras_unicas)
