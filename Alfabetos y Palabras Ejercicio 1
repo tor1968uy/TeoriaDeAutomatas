@@ -1,0 +1,71 @@
+"""##### **Ejercicio 1: Implementar nuevas operaciones**
+
+**Descripción del problema:**
+
+Modificar el código anterior para incluir dos nuevas operaciones con palabras.
+
+**Objetivo:**
+- Verificar si una palabra pertenece al alfabeto.
+- Contar cuántas veces aparece cada símbolo en la palabra.
+- Ordenar la palabra alfabéticamente.
+
+**Entradas:**
+1. Un alfabeto $\Sigma$.
+2. Una palabra $w$.
+
+**Salidas:**
+1. Pertenencia al alfabeto (True/False).
+2. Frecuencia de símbolos en la palabra.
+3. Palabra ordenada alfabéticamente.
+
+
+**Ejemplo de entrada y salida esperada:**
+
+Entrada:
+```python
+alfabeto = {'a', 'b'}
+palabra = "abbaba"
+```
+
+Salida esperada (aproximada):
+```yaml
+Pertenece al alfabeto: True  
+Frecuencia de símbolos: {'a': 3, 'b': 3}  
+Palabra ordenada: "aaabbb"
+```
+"""
+
+## Ejercicio 1
+# ##########################################################################################################
+
+# Función para manipular una palabra con nuevas operaciones
+def manipular_palabra(alfabeto, palabra):
+    # Verifica si todos los caracteres de la palabra pertenecen al alfabeto
+    pertenece_al_alfabeto = all(letra in alfabeto for letra in palabra)
+
+    # Cuenta la frecuencia de cada símbolo en la palabra
+    frecuencia_simbolos = {}
+    for letra in palabra:
+        if letra in frecuencia_simbolos:
+            frecuencia_simbolos[letra] += 1
+        else:
+            frecuencia_simbolos[letra] = 1
+
+    # Ordena la palabra alfabéticamente
+    palabra_ordenada = ''.join(sorted(palabra))
+
+    # Devuelve los resultados
+    return pertenece_al_alfabeto, frecuencia_simbolos, palabra_ordenada
+
+
+# Ejemplo de uso
+alfabeto = {'a', 'b'}
+palabra = "abbaba"
+
+# Llamada a la función
+resultado = manipular_palabra(alfabeto, palabra)
+
+# Imprimir resultados
+print("Pertenece al alfabeto:", resultado[0])
+print("Frecuencia de símbolos:", resultado[1])
+print("Palabra ordenada:", resultado[2])
