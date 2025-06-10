@@ -1,0 +1,74 @@
+"""##### **Ejercicio 1: Implementar otro DFA**
+
+**Descripción del problema**
+
+Queremos modificar el código del ejemplo para simular otro DFA.
+
+**Objetivo**
+- Implementar un DFA con una lógica diferente.
+- Verificar si una palabra pertenece al lenguaje aceptado.
+
+
+**Nueva definición del DFA**
+- Estados: $\{q_0, q_1, q_2\}$
+- Alfabeto: $\{0,1\}$
+- Estado inicial: $q_0$
+- Estados de aceptación: $q_2$
+- Transiciones:
+
+| Estado  | Entrada $0$ | Entrada $1$ |
+| :-----: | :---------: | :---------: |
+| $q_0$   |   $q_0$   | $q_1$ |
+| $q_1$   |   $q_2$  | $q_1$ |
+| $q_2$   |  $q_0$   | $q_1$ |
+
+**Instrucciones:**
+1. Modifica el código del ejemplo para reflejar las nuevas transiciones.
+2. Prueba con palabras como "$100$", "$01$" y "$0001$".
+"""
+
+def simular_dfa(estado_inicial, estados_aceptacion, transiciones, palabra):
+    estado_actual = estado_inicial
+
+    # Procesar cada símbolo de la palabra uno por uno
+    for simbolo in palabra:
+        # Verificar si existe una transición definida para el estado actual y el símbolo
+        if (estado_actual, simbolo) in transiciones:
+            # Actualizar el estado actual según la función de transición
+            estado_actual = transiciones[(estado_actual, simbolo)]
+        else:
+            # Si no hay transición definida, la palabra es rechazada
+            return "Rechazada"
+
+    # Después de procesar todos los símbolos, verificar si el estado actual es de aceptación
+    return "Aceptada" if estado_actual in estados_aceptacion else "Rechazada"
+
+# Definición del DFA
+estados = {"q0", "q1", "q2"}   # Conjunto de estados
+alfabeto = {"0", "1"}          # Alfabeto de entrada
+estado_inicial = "q0"          # Estado inicial
+estados_aceptacion = {"q2"}    # Conjunto de estados de aceptación
+
+# Función de transición representada como un diccionario
+transiciones = {
+    ("q0", "0"): "q0",  # Desde q0, con '0' va a q0
+    ("q0", "1"): "q1",  # Desde q0, con '1' sigue en q1
+    ("q1", "0"): "q2",  # Desde q1, con '0' va a q2
+    ("q1", "1"): "q1",  # Desde q1, con '1' vuelve a q1
+    ("q2", "0"): "q0",  # Desde q2, con '0' sigue en q0
+    ("q2", "1"): "q1"   # Desde q2, con '1' sigue en q1
+}
+
+# Ejemplo de uso
+ejemplos = ["100", "01", "0001"]
+for ejemplo in ejemplos:
+    print(ejemplo , '-->', simular_dfa(estado_inicial, estados_aceptacion, transiciones, ejemplo))
+
+palabra = input("Ingrese una palabra (compuesta por 0 y 1): ")
+
+# Validar que la palabra solo contenga símbolos del alfabeto
+if all(simbolo in alfabeto for simbolo in palabra):
+    resultado = simular_dfa(estado_inicial, estados_aceptacion, transiciones, palabra)
+    print(resultado)  # Salida: "Aceptada" o "Rechazada"
+else:
+    print("La palabra contiene símbolos no válidos. Solo se permiten '0' y '1'.")
