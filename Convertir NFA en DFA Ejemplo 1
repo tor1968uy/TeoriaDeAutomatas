@@ -1,0 +1,93 @@
+##### **Ejemplo  2 - Conversión de un NFA a un DFA**
+
+- NFA dado:
+
+| Estado  | Entrada $a$ | Entrada $b$ |
+| :-----: | :---------: | :---------: |
+| $q_0$   |   $q_0,q_1$   | - |
+| $q_1$   |   -      | $q_2$        |
+| $q_1$   |   $q_3$      | -       |
+| $q_1$   |   $q_3$      | $q_3$        |
+
+- Salida esperada (formato crudo y tabla):
+```makefile
+Estados DFA crudos:
+D0 = {q0}
+D1 = {q0, q1}
+D2 = {q2}
+D3 = {q3}
+Dp = ∅
+Tabla de transiciones:
+| Estado | Entrada 'a' | Entrada 'b' |
+|--------|------------|-------------|
+| D0     | D1         | Dp          |
+| D1     | D1         | D2          |
+| D2     | D3         | Dp          |
+| D3     | D3         | D3          |
+| Dp     | Dp         | Dp          |
+```
+
+**Observación sobre el uso de `frozenset()` en el código**
+
+En la conversión de un NFA a un DFA, cada estado del DFA representa un conjunto de estados del NFA. Como los conjuntos en Python (`set()`) no son hashables (no pueden ser usados como claves en diccionarios), necesitamos una estructura que permita almacenar estos conjuntos como claves en nuestro diccionario de transiciones.
+
+**Nota**: la numeración de los estados del DFA (como D0, D1, D2, ...) puede variar dependiendo del orden en que se procesen los subconjuntos. Por lo tanto, los resultados deben coincidir salvo una permutación en los nombres de los estados.
+"""
+
+from collections import defaultdict
+
+def convertir_nfa_a_dfa(nfa_transiciones, estado_inicial):
+    dfa_transiciones = {}  # Diccionario para almacenar las transiciones del DFA
+    estados_dfa = {frozenset([estado_inicial])}  # Conjunto de estados del DFA
+    estados_pendientes = [frozenset([estado_inicial])]  # Lista de estados por procesar
+    estados_nombres = {}  # Diccionario para asignar nombres a los estados
+
+    # Asignamos nombres a los estados DFA (D0, D1, ...)
+    contador = 0
+    for estado in estados_dfa:
+        estados_nombres[estado] = f"D{contador}"
+        contador += 1
+
+    while estados_pendientes:
+        estado_actual = estados_pendientes.pop()
+        for simbolo in {"a", "b"}:
+            nuevos_estados = set()
+            for estado in estado_actual:
+                nuevos_estados.update(nfa_transiciones.get((estado, simbolo), []))
+
+            nuevos_estados_frozen = frozenset(nuevos_estados) if nuevos_estados else frozenset(["Dp"])  # Estado pozo si no hay transición
+            dfa_transiciones[(estado_actual, simbolo)] = nuevos_estados_frozen
+
+            if nuevos_estados_frozen not in estados_dfa:
+                estados_dfa.add(nuevos_estados_frozen)
+                estados_pendientes.append(nuevos_estados_frozen)
+                estados_nombres[nuevos_estados_frozen] = f"D{contador}"
+                contador += 1
+
+    # Salida formateada
+    print("\nEstados DFA crudos:")
+    for estado, nombre in estados_nombres.items():
+        print(f"{nombre} = {set(estado)}")
+
+    print("\nTabla de transiciones:")
+    print(f"{'Estado':<10} | {'Entrada a':<10} | {'Entrada b':<10}")
+    print("-" * 35)
+
+    for estado in estados_dfa:
+        estado_nombre = estados_nombres[estado]
+        destino_a = estados_nombres[dfa_transiciones.get((estado, "a"), frozenset(["Dp"]))]
+        destino_b = estados_nombres[dfa_transiciones.get((estado, "b"), frozenset(["Dp"]))]
+        print(f"{estado_nombre:<10} | {destino_a:<10} | {destino_b:<10}")
+
+    return dfa_transiciones
+
+# Definir el NFA
+nfa_transiciones = {
+    ("q0", "a"): {"q0", "q1"},
+    ("q1", "b"): {"q2"},
+    ("q2", "a"): {"q3"},
+    ("q3", "a"): {"q3"},
+    ("q3", "b"): {"q3"},
+}
+
+dfa = convertir_nfa_a_dfa(nfa_transiciones, "q0")
