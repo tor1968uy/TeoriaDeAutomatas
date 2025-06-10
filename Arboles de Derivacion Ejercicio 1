@@ -1,0 +1,58 @@
+"""##### **Ejercicio 1: Implementar una nueva gramática**
+
+**Descripción del problema:**
+
+Ahora que hemos entendido cómo generar palabras a partir de una gramática, queremos modificar el código del ejemplo para generar una nueva palabra.
+
+**Objetivo:**
+- Modificar la gramática para generar una palabra diferente.
+- Ejecutar el código y verificar que la palabra generada sea la esperada.
+- **Nueva gramática** $G = (\{S, A\}, \{a, b\}, S, \{S \to aAb\, |\, aaAb, A \to aabbA\,|\,ba\})$
+- Generar la palabra "$abab$".
+
+**Ejemplo de salida esperada:**
+```yaml
+Paso 1: S  
+Paso 2: aAb  
+Paso 3: abab  
+```
+"""
+
+from collections import deque
+
+def derivacion(simbolo_inicial, reglas, palabra_objetivo):
+    # Fila para explorar todas las posibilidades
+    fila = deque([(simbolo_inicial, [simbolo_inicial])])
+
+    while fila:
+        actual, pasos = fila.popleft()  # Tomamos el primer elemento de la fila
+
+        # Si hemos alcanzado la palabra objetivo, retornamos los pasos
+        if actual == palabra_objetivo:
+            return pasos
+
+        for i, simbolo in enumerate(actual):
+            if simbolo in reglas:  # Si encontramos un no terminal, aplicamos sus reglas de producción
+                for produccion in reglas[simbolo]:
+                    nueva_cadena = actual[:i] + produccion + actual[i+1:]  # Sustituimos el símbolo
+
+                    # Garantizamos que la nueva cadena no supere la longitud de la palabra esperada
+                    if len(nueva_cadena) <= len(palabra_objetivo):
+                        fila.append((nueva_cadena, pasos + [nueva_cadena]))  # Añadimos a la fila para continuar la exploración
+
+    print("No se puede derivar la palabra objetivo con la gramática dada.")
+    return []
+
+# Definición de la gramática
+gramatica = {
+    "S": ["aAb","aaAb"],  # S → aAb
+    "A": ["aabbA","ba"]    # A → aabbA
+}
+
+# Generando la derivación para "ab"
+derivacion_resultado = derivacion("S", gramatica, "abab")
+
+# Mostrando los pasos de la derivación
+if derivacion_resultado:
+    for i, paso in enumerate(derivacion_resultado):
+        print(f"Paso {i+1}: {paso}")
