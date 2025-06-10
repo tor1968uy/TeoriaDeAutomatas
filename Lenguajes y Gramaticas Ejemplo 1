@@ -1,0 +1,50 @@
+##### **Ejemplo 2: Generación de palabras de un lenguaje**
+
+**Descripción del problema:**
+
+Dado un alfabeto finito $\Sigma$, queremos generar palabras que cumplan una condición específica dentro de un lenguaje.
+
+**Objetivo:**
+- Generar palabras de un lenguaje con ciertas reglas.
+- Considerar solo palabras con número par de 'a's..
+
+**Entradas:**
+1. Un alfabeto $\Sigma$.
+2. Un número entero $n$ (máxima longitud de las palabras)
+
+**Salidas:**
+1. Una lista de palabras que cumplen la condición.
+
+
+**Ejemplo de entrada y salida esperada:**
+
+Entrada:
+```python
+alfabeto = {'a', 'b'}
+tamaño = 2
+```
+
+Salida esperada:
+```vbnet
+L1: [ε, 'b', 'bb', 'aa']
+```
+"""
+
+from itertools import product
+
+def generar_palabras(alfabeto, tamaño):
+    return [''.join(p) for i in range(tamaño+1) for p in product(alfabeto, repeat=i)]
+
+def pertenece_L1(palabra):
+    return palabra.count('a') % 2 == 0  # Número par de 'a's
+
+def generar_lenguaje(alfabeto, tamaño, criterio):
+    palabras = generar_palabras(alfabeto, tamaño)
+    return [p for p in palabras if criterio(p)]
+
+# Ejemplo de uso
+alfabeto = {'a', 'b'}
+tamaño = 4
+
+L1 = generar_lenguaje(alfabeto, tamaño, pertenece_L1)
+print("L1:", L1)
