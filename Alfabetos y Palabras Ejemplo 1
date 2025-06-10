@@ -1,0 +1,61 @@
+##### **Ejemplo 1: Manipulación de palabras**
+
+**Descripción del problema:**
+
+Dado un alfabeto finito $\Sigma$ y una palabra $w$, queremos verificar si la palabra pertenece al alfabeto y aplicar algunas transformaciones sobre ella.
+
+**Objetivo:**
+- Verificar si una palabra contiene solo símbolos del alfabeto.
+- Devolver la palabra invertida.
+- Repetir la palabra n veces (potenciación).
+
+**Entradas:**
+1. Un alfabeto $\Sigma$ (conjunto de símbolos).
+2. Una palabra $w$ (cadena de caracteres).
+3. Un número entero n (cantidad de repeticiones).
+
+**Salidas:**
+1. Pertenencia al alfabeto (True/False).
+2. Palabra invertida.
+3. Palabra repetida n veces.
+
+
+**Ejemplo de entrada y salida esperada:**
+
+Entrada:
+```python
+alfabeto = {'a', 'b'}
+palabra = "aba"
+potencia = 3
+
+```
+
+Salida esperada:
+```yaml
+Pertenece al alfabeto: True  
+Palabra invertida: "aba"  
+Palabra repetida: "abaabaaba"
+```
+"""
+
+def manipular_palabra(alfabeto, palabra, potencia):
+    # Verifica si todos los caracteres pertenecen al alfabeto
+    pertenece = all(letra in alfabeto for letra in palabra)
+
+    # Inversión de la palabra
+    inversa = palabra[::-1]
+
+    # Potenciación de la palabra
+    potencia_palabra = palabra * potencia
+
+    return pertenece, inversa, potencia_palabra
+
+# Ejemplo de uso
+alfabeto = {'a', 'b'}
+palabra = "aba"
+potencia = 3
+
+resultado = manipular_palabra(alfabeto, palabra, potencia)
+print("Pertenece al alfabeto:", resultado[0])
+print("Palabra invertida:", resultado[1])
+print("Palabra repetida:", resultado[2])
