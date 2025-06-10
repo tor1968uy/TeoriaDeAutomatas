@@ -1,0 +1,197 @@
+"""#### **Derivación izquierda y derecha**
+
+Existen dos formas de aplicar las reglas de producción de una gramática:
+
+✅ Derivación por la izquierda: Siempre se sustituye el símbolo no terminal más a la izquierda.
+
+✅ Derivación por la derecha: Siempre se sustituye el símbolo no terminal más a la derecha.
+
+El tipo de derivación afecta la construcción de los árboles de derivación.
+
+##### **Ejemplo 2: Implementación de derivación izquierda y derecha**
+
+**Descripción del problema:**
+
+Queremos construir una palabra a partir de una gramática aplicando dos estrategias diferentes: derivación izquierda y derivación derecha.
+
+**Objetivo:**
+- Implementar la derivación de una palabra de forma determinada por el orden de sustitución.
+- Comparar los resultados obtenidos con derivación izquierda y derecha.
+
+**Gramática dada:**
+- $G = (\{S, A\}, \{a, b\}, S, \{S \to aAS\, |\, a, A \to Ab\,|\,b\})$
+- Generar la palabra "$aba$".
+
+**Entradas**
+1. Un símbolo inicial S.
+2. Reglas de producción de la gramática.
+3. Estrategia de derivación (izquierda o derecha).
+
+**Salidas**
+1. Secuencia de pasos en la derivación.
+
+**Ejemplo de salida esperada:**
+- Derivación por la izquierda:
+```yaml
+Paso 1: S
+Paso 2: aAS
+Paso 3: abS
+Paso 4: aba
+```
+- Derivación por la derecha:
+```yaml
+Paso 1: S
+Paso 2: aAS
+Paso 3: aAa
+Paso 4: aba   
+```
+"""
+
+----------------------------------------------------
+## Análisis del código de derivación y propuestas de mejora
+
+### 🔍 Limitaciones identificadas
+1. **Falta de control de cadenas repetidas**
+   El código no verifica si una cadena ya fue procesada, lo que puede causar:
+   - Bucles infinitos en gramáticas recursivas
+   - Procesamiento redundante de las mismas cadenas
+
+2. **Restricción de longitud prematura**
+   La condición `len(nueva_cadena) <= len(palabra_objetivo)` bloquea derivaciones válidas que requieren pasos intermedios largos (comunes en gramáticas con producciones épsilon).
+
+3. **Orden de expansión ineficiente**
+   Al expandir siempre el primer no-terminal de izquierda a derecha, podría perderse derivaciones más eficientes.
+
+### 🧪 Caso de prueba problemático
+**Gramática modificada:**
+```python
+gramatica_epsilon = {
+    "S": ["aA"],
+    "A": ["a", ""]  # Producción épsilon (cadena vacía)
+}
+```
+**Objetivo:** `"a"`
+**Comportamiento actual:** No encuentra la derivación `S → aA → a`
+
+### 💡 Propuestas de solución
+1. **Añadir conjunto de visitados**
+   Evitar reprocesar cadenas ya exploradas:
+   ```python
+   def derivacion_mejorada(simbolo_inicial, reglas, palabra_objetivo):
+       visitados = set()
+       fila = deque([(simbolo_inicial, [simbolo_inicial])])
+       visitados.add(simbolo_inicial)
+
+       while fila:
+           actual, pasos = fila.popleft()
+
+           if actual == palabra_objetivo:
+               return pasos
+
+           for i, simbolo in enumerate(actual):
+               if simbolo in reglas:
+                   for produccion in reglas[simbolo]:
+                       nueva = actual[:i] + produccion + actual[i+1:]
+                       if nueva not in visitados:
+                           visitados.add(nueva)
+                           fila.append((nueva, pasos + [nueva]))
+       return []
+   ```
+
+2. **Eliminar restricción de longitud**
+   Permitir cadenas más largas que el objetivo:
+   ```python
+   # Eliminar esta línea:
+   if len(nueva_cadena) <= len(palabra_objetivo):
+   ```
+
+3. **Implementar búsqueda en profundidad (DFS) controlada**
+   Para gramáticas con derivaciones largas pero necesarias:
+   ```python
+   def derivacion_dfs(simbolo, reglas, objetivo, max_profundidad=10):
+       pila = [(simbolo, [simbolo], 0)]
+
+       while pila:
+           actual, pasos, profundidad = pila.pop()
+           if actual == objetivo:
+               return pasos
+           if profundidad < max_profundidad:
+               # Expansión inversa (para priorizar ciertas reglas)
+               for i in reversed(range(len(actual))):
+                   if actual[i] in reglas:
+                       for prod in reversed(reglas[actual[i]]):
+                           nueva = actual[:i] + prod + actual[i+1:]
+                           pila.append((nueva, pasos + [nueva], profundidad + 1))
+       return []
+   ```
+
+### 📊 Comparativa de enfoques
+| Enfoque       | Ventajas                      | Desventajas               |
+|---------------|-------------------------------|---------------------------|
+| BFS original  | Encuentra la derivación más corta | No maneja recursión infinita |
+| BFS + visitados| Evita ciclos infinitos        | Mayor uso de memoria       |
+| DFS controlado| Mejor para derivaciones largas | Puede perder caminos cortos |
+
+### ✅ Implementación recomendada
+La versión mejorada combinando BFS con visitados y sin restricción de longitud:
+```python
+from collections import deque
+
+def derivacion_optimizada(simbolo_inicial, reglas, palabra_objetivo):
+    visitados = set()
+    fila = deque([(simbolo_inicial, [simbolo_inicial])])
+    visitados.add(simbolo_inicial)
+
+    while fila:
+        actual, pasos = fila.popleft()
+
+        if actual == palabra_objetivo:
+            return pasos
+
+        for i in range(len(actual)):
+            simbolo = actual[i]
+            if simbolo in reglas:
+                for produccion in reglas[simbolo]:
+                    nueva = actual[:i] + produccion + actual[i+1:]
+                    if nueva not in visitados:
+                        visitados.add(nueva)
+                        fila.append((nueva, pasos + [nueva]))
+
+    print("Derivación no encontrada")
+    return []
+```
+
+Este enfoque:
+1. Maneja producciones épsilon correctamente
+2. Evita ciclos infinitos
+3. Mantiene la completitud de BFS
+4. Reduce significativamente el espacio de búsqueda
+
+**Ejemplo de uso exitoso:**
+```python
+gramatica = {
+    "S": ["aAb", "aaAb"],
+    "A": ["aabbA", "ba"]
+}
+
+print(derivacion_optimizada("S", gramatica, "abab"))
+# Salida: ['S', 'aAb', 'abab']
+```
+
+### Corte prematuro.. se debe evaluar el largo de la palabra excluyendo los simbolos no terminales en la misma
+### Evaluar las palabras hasta los simbolos no terminales
+### Ejemplo aAb o bSab nunca podra generar la palabra bba porque las posiciones de las letras en la misma no coinciden
+### Guardar un registro de cadenas ya procesadas par ano caer en loops infinitos
+### Al evaluar siempre la expansion por derecha, se pueden perder expansiones mas eficientes de la palabra
+
+"""##### **Ejercicio 3 - Desafío: Mejorando el código**
+
+**Descripción del problema:**
+
+El código que acabamos de ver permite realizar derivaciones de una palabra con estrategias izquierda o derecha. Sin embargo, como cualquier implementación, existen múltiples formas de mejorarlo y hacer que sea más flexible y poderoso.
+
+Este es un ejercicio abierto, donde no hay una única respuesta correcta. Queremos que explores el código, identifiques sus limitaciones y pienses en posibles mejoras. Lo más importante aquí es el proceso de análisis y razonamiento.
+
+📌 Tu tarea es investigar y proponer mejoras en el código. Puedes enfocarte en cualquier aspecto que consideres relevante.
+"""
+
