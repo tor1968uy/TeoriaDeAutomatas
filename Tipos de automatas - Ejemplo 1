@@ -1,0 +1,60 @@
+##### **Ejemplo 1: Simulación de un DFA**
+
+**Descripción del problema**
+
+Dado un **autómata finito determinista (DFA)** que procesa cadenas formadas por los símbolos 0 y 1, queremos simular su funcionamiento y verificar si una palabra es aceptada por el autómata.
+
+**Objetivo**
+- Implementar la simulación de un DFA en Python.
+- Procesar una palabra de entrada y determinar si es aceptada.
+
+
+**Definición del DFA**
+- $Q = \{q_0, q_1, q_2\}$ (Estados)
+- $\Sigma = \{0,1\}$ (Alfabeto de entrada)
+- $q_0$ (Estado inicial)
+- $F = \{q_2\}$ (Estado de aceptación)
+- Función de transición $\delta$:
+
+| Estado  | Entrada $0$ | Entrada $1$ |
+| :-----: | :---------: | :---------: |
+| $q_0$   |   $q_1$   | $q_0$ |
+| $q_1$   |   $q_2$  | $q_0$ |
+| $q_2$   |  $q_2$   | $q_2$ |
+
+**Entradas**
+- Una palabra formada por los símbolos $0$ y $1$.
+
+**Salidas**
+- "Aceptada" si la palabra lleva al estado de aceptación.
+- "Rechazada" si la palabra no termina en un estado de aceptación.
+"""
+
+def simular_dfa(estado_inicial, estados_aceptacion, transiciones, palabra):
+    estado_actual = estado_inicial
+
+    for simbolo in palabra:
+        if (estado_actual, simbolo) in transiciones:
+            estado_actual = transiciones[(estado_actual, simbolo)]
+        else:
+            return "Rechazada"
+
+    return "Aceptada" if estado_actual in estados_aceptacion else "Rechazada"
+
+# Definición del DFA
+estados = {"q0", "q1", "q2"}
+alfabeto = {"0", "1"}
+estado_inicial = "q0"
+estados_aceptacion = {"q2"}
+transiciones = {
+    ("q0", "0"): "q1",
+    ("q0", "1"): "q0",
+    ("q1", "0"): "q2",
+    ("q1", "1"): "q0",
+    ("q2", "0"): "q2",
+    ("q2", "1"): "q2"
+}
+
+# Ejemplo de uso
+palabra = "0010"
+print(simular_dfa(estado_inicial, estados_aceptacion, transiciones, palabra))  # Salida esperada: "Aceptada"
