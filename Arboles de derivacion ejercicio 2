@@ -1,0 +1,60 @@
+"""##### **Ejercicio 2 - Desafío: Mejorando la derivación de palabras**
+
+**Descripción del problema:**
+
+El código de derivación implementado en el Ejercicio 1 genera palabras correctamente en muchos casos. Sin embargo, algunas gramáticas pueden presentar desafíos que impiden su correcto funcionamiento.
+
+Tu tarea es analizar el código, identificar posibles limitaciones y proponer soluciones.
+
+**Objetivo:**
+- Ejecutar el código con una nueva gramática y observar su comportamiento.
+- Identificar casos en los que el código no produce la palabra esperada.
+- Reflexionar sobre qué cambios serían necesarios para resolver estos problemas.
+"""
+
+from collections import deque
+
+def derivacion(simbolo_inicial, reglas, palabra_objetivo, estrategia="izquierda"):
+    # Cola para explorar todas las posibilidades
+    fila = deque([(simbolo_inicial, [simbolo_inicial])])
+
+    while fila:
+        actual, pasos = fila.popleft()  # Tomamos el primer elemento de la fila
+
+        # Si alcanzamos la palabra objetivo, retornamos los pasos
+        if actual == palabra_objetivo:
+            return pasos
+
+        # Decidir el orden de sustitución según la estrategia
+        indices = range(len(actual)) if estrategia == "izquierda" else reversed(range(len(actual)))
+
+        for i in indices:
+            simbolo = actual[i]
+            if simbolo in reglas:  # Si encontramos un no terminal, aplicamos sus reglas de producción
+                for produccion in reglas[simbolo]:
+                    nueva_cadena = actual[:i] + produccion + actual[i+1:]  # Sustituimos el símbolo
+
+                    # Aseguramos que la nueva cadena no sea más larga que la palabra objetivo
+                    if len(nueva_cadena) <= len(palabra_objetivo):
+                        fila.append((nueva_cadena, pasos + [nueva_cadena]))  # Añadimos a la cola para continuar la exploración
+                break  # Aplicamos solo una sustitución por iteración
+
+    print("No se puede derivar la palabra objetivo con la gramática dada.")
+    return []
+
+# Definición de la gramática
+gramatica = {
+    "S": ["aAS", "a"],  # S → aA
+    "A": ["Ab", "b"]  # A → Ab | b
+}
+
+# Generando la derivación para "aba" con ambas estrategias
+print("Derivación por la izquierda:")
+derivacion_izquierda = derivacion("S", gramatica, "aba", "izquierda")
+for i, paso in enumerate(derivacion_izquierda):
+    print(f"Paso {i+1}: {paso}")
+
+print("\nDerivación por la derecha:")
+derivacion_derecha = derivacion("S", gramatica, "aba", "derecha")
+for i, paso in enumerate(derivacion_derecha):
+    print(f"Paso {i+1}: {paso}")
