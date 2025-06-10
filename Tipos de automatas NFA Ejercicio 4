@@ -1,0 +1,113 @@
+##### **Ejercicio 4 - NFA con estados sin transición**
+
+**Descripción del problema**
+
+En un NFA (Autómata Finito No Determinista), un estado puede no tener transiciones para un símbolo de entrada. En este caso, los caminos que llegan a ese estado "mueren" y no pueden continuar.
+
+Queremos implementar la simulación de un NFA en Python, considerando que algunos estados pueden no tener transiciones para ciertos símbolos.
+
+**Objetivo**
+- Implementar un NFA con estados sin transición.
+- Procesar una palabra y determinar si al menos un camino lleva a un estado de aceptación.
+- Finalizar el procesamiento de un camino cuando no hay transición disponible.
+
+**Definición del NFA**
+- Estados: $\{q_, q_1, q_2, q_3, q_4\}$
+- Alfabeto: $\{a, b\}$
+- Estado inicial: $q_0$
+- Estados de aceptación: $\{q_3\}$
+- Transiciones:
+
+| Estado  | Entrada $a$ | Entrada $b$ |
+| :-----: | :---------: | :---------: |
+| $q_0$   | $q_1, q_2$  |   -    |
+| $q_1$   |   -         | $q_3$  |
+| $q_2$   | $q_4$       |   -    |
+| $q_3$   | $q_3$       |   -    |
+| $q_4$   |   -         |   -    |
+
+**📌 Nota:**
+- $q_4$ no tiene transiciones, lo que significa que cualquier camino que llegue a q4 se considera muerto.
+- Un camino es válido solo si al final de la palabra al menos un estado activo pertenece a $F$.
+
+**Entradas**
+- Una palabra formada por los símbolos $\{a, b\}$.
+
+**Salidas**
+- "Aceptada" si al menos un camino lleva a un estado de aceptación.
+- "Rechazada" si todos los caminos mueren antes de llegar a un estado final.
+
+**Dica para implementar en Python**
+
+En la simulación, mantenemos una lista de estados activos.
+1. Si un estado no tiene transiciones para un símbolo, lo eliminamos de la lista.
+2. Si la lista de estados activos se vacía antes de terminar la palabra, la palabra se rechaza inmediatamente.
+"""
+
+def simular_nfa(estado_inicial, estados_aceptacion, transiciones, palabra):
+    # Simula el procesamiento de una palabra en un NFA.
+    # Args:
+    #    estado_inicial (str): Estado inicial del NFA.
+    #    estados_aceptacion (set): Conjunto de estados de aceptación.
+    #    transiciones (dict): Función de transición (puede ser no determinista).
+    #    palabra (str): Palabra a procesar.
+    # Returns:
+    #    str: "Aceptada" si al menos un camino lleva a aceptación, "Rechazada" en caso contrario.
+
+    estados_actuales = {estado_inicial}  # Conjunto de estados actuales (puede haber varios)
+
+    for simbolo in palabra:
+        nuevos_estados = set()
+        for estado in estados_actuales:
+            if (estado, simbolo) in transiciones:
+                nuevos_estados.update(transiciones[(estado, simbolo)])
+        estados_actuales = nuevos_estados
+        if not estados_actuales:  # Si no hay transiciones posibles
+            return "Rechazada"
+
+    # Verificar si al menos un estado actual es de aceptación
+    return "Aceptada" if estados_actuales & estados_aceptacion else "Rechazada"
+
+def validar_palabra(palabra, alfabeto):
+    return all(simbolo in alfabeto for simbolo in palabra)
+
+# Definición del NFA
+estados = {"q0", "q1", "q2", "q3", "q4"}  # Estados posibles
+alfabeto = {"a", "b"}          # Alfabeto permitido
+estado_inicial = "q0"          # Estado inicial
+estados_aceptacion = {"q3"}    # Estados de aceptación
+
+# Función de transición no determinista (δ)
+transiciones = {
+    ("q0", "a"): {"q1", "q2"},  # Desde q0, con 'a' puede ir a q1 o q2
+    ("q1", "b"): {"q3"},        # Desde q1, con 'b' va a q3
+    ("q2", "a"): {"q4"},        # Desde q2, con 'a' sigue en q4
+    ("q3", "a"): {"q3"}        # Desde q3, con 'a' sigue en q3
+}
+
+# Ejemplos predefinidos
+ejemplos = ["ab", "aab", "bbab", "baab", "aaaaaab"]
+print("\n=== Pruebas Automáticas ===")
+for ejemplo in ejemplos:
+    if validar_palabra(ejemplo, alfabeto):
+        resultado = simular_nfa(estado_inicial, estados_aceptacion, transiciones, ejemplo)
+        print(f"'{ejemplo}' → {resultado}")
+    else:
+        print(f"'{ejemplo}' → Error: Contiene símbolos no válidos")
+
+palabra = ' '
+print("\n=== Modo Interactivo ===")
+print("Ingrese palabras una por una. Presione Enter sin escribir para terminar.")
+lista_palabras = []
+while palabra != '':
+   palabra = input("Ingrese una palabra: ")
+   if palabra != '' :
+      lista_palabras.append(palabra)
+
+print("\n=== Resultados ===")
+for i, palabra in enumerate(lista_palabras, 1):
+    if validar_palabra(palabra, alfabeto):
+        resultado = simular_nfa(estado_inicial, estados_aceptacion, transiciones, palabra)
+        print(f"Palabra {i}: '{palabra}' → {resultado}")
+    else:
+        print(f"Palabra {i}: '{palabra}' → Error: Contiene símbolos no válidos")
