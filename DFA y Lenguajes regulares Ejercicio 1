@@ -1,0 +1,65 @@
+"""##### **Ejercicio 1: Construir un NFA para palabras con al menos un '1'**
+
+**Descripción del problema**
+
+Queremos construir un NFA que acepte todas las palabras sobre el alfabeto $\Sigma = \{0,1\}$ que **contengan al menos un '1'** en cualquier posición.
+
+**Objetivo**
+- Implementar la simulación en Python.
+- Comprobar que el autómata acepta correctamente las palabras del lenguaje deseado.
+
+**Definición del NFA**
+- Estados: $\{q_0, q_1, q_2\}$
+- Alfabeto: $\{0,1\}$
+- Estado inicial: $q_0$
+- Estados de aceptación: $q_1$
+- Transiciones:
+
+| Estado  | Entrada $0$ | Entrada $1$ |
+| :-----: | :---------: | :---------: |
+| $q_0$   |   $q_0$   | $q_0,q_1$ |
+| $q_1$   |   $q_1$      | $q_1$        |
+
+**Observación:**
+- $q_0$ representa que aún no hemos encontrado un '1'.
+- $q_1$ indica que al menos un '1' fue encontrado.
+
+**Instrucciones:**
+1. Implementa la simulación de este NFA en Python.
+2. Verifica tu simulación con palabras como "000", "101", "111" y otras.
+3. Reflexiona sobre si el autómata diseñado cubre todos los casos posibles y si existen palabras que podrían no ser procesadas correctamente.
+"""
+
+class DFA:
+    def __init__(self, estados, alfabeto, transiciones, estado_inicial, estados_aceptacion):
+        self.estados = estados
+        self.alfabeto = alfabeto
+        self.transiciones = transiciones
+        self.estado_inicial = estado_inicial
+        self.estados_aceptacion = estados_aceptacion
+
+    def procesar_palabra(self, palabra):
+        estado_actual = self.estado_inicial
+        for simbolo in palabra:
+            estado_actual = self.transiciones.get((estado_actual, simbolo), None)
+            if estado_actual is None:
+                return "Rechazada"
+        return "Aceptada" if estado_actual in self.estados_aceptacion else "Rechazada"
+
+# Definir el DFA
+estados = {"q0", "q1", "q2"}
+alfabeto = {"0", "1"}
+estado_inicial = "q0"
+estados_aceptacion = {"q2"}
+transiciones = {
+    ("q0", "0"): "q1", ("q0", "1"): "q0",
+    ("q1", "0"): "q1", ("q1", "1"): "q2",
+    ("q2", "0"): "q1", ("q2", "1"): "q0"
+}
+
+dfa = DFA(estados, alfabeto, transiciones, estado_inicial, estados_aceptacion)
+
+# Probar palabras
+palabras = ["01", "1001", "110", "0001"]
+for palabra in palabras:
+    print(f'Palabra: "{palabra}" -> {dfa.procesar_palabra(palabra)}')
