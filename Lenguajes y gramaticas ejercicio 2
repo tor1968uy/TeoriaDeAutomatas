@@ -1,0 +1,93 @@
+"""##### **Ejercicio 2: Definir un nuevo lenguaje**
+
+**Descripción del problema:**
+
+Modificar el código anterior para generar palabras que tengan una cantidad impar de 'b'.
+
+**Objetivo:**
+- Implementar una función que genere palabras bajo una nueva regla de lenguaje.
+
+**Ejemplo de entrada y salida esperada:**
+
+Entrada:
+```python
+alfabeto = {'a', 'b'}
+tamaño = 4
+```
+
+Salida esperada (aproximada):
+```vbnet
+L2: ["b", "aab", "baa", "baaa", "aaba"]
+```
+"""
+
+## Ejercicio 2
+# ##########################################################################################################
+
+# Función para generar todas las palabras posibles de un alfabeto hasta una longitud máxima
+# Importamos la función product de la biblioteca itertools
+
+from itertools import product
+
+
+# Definimos la función generar_palabras que toma un alfabeto y un tamaño máximo
+def generar_palabras(alfabeto, tamanio_maximo):
+    # Creamos una lista vacía para almacenar todas las palabras generadas
+    palabras_generadas = []
+
+    # Recorremos desde 0 hasta el tamaño máximo (inclusive)
+    for i in range(tamanio_maximo + 1):
+        # Generamos todas las combinaciones posibles de longitud i con los símbolos del alfabeto
+        combinaciones = product(alfabeto, repeat=i)
+
+        # Recorremos cada combinación generada
+        for combinacion in combinaciones:
+            # Unimos los símbolos de la combinación para formar una palabra
+            palabra = ''.join(combinacion)
+
+            # Añadimos la palabra a la lista de palabras generadas
+            palabras_generadas.append(palabra)
+
+    # Devolvemos la lista de palabras generadas
+    return palabras_generadas
+
+# Función para verificar si una palabra tiene una cantidad impar de 'b's
+# Definimos la función tiene_impar_b que toma una palabra como entrada
+def tiene_impar_b(palabra):
+    # Contamos cuántas veces aparece la letra 'b' en la palabra
+    cantidad_de_b = palabra.count('b')
+
+    # Verificamos si la cantidad de 'b's es impar
+    es_impar = cantidad_de_b % 2 == 1
+
+    # Devolvemos True si la cantidad de 'b's es impar, False en caso contrario
+    return es_impar
+
+# Función para generar un lenguaje con palabras que cumplen un criterio específico
+# Definimos la función generar_lenguaje que toma un alfabeto, un tamaño máximo y un criterio
+def generar_lenguaje(alfabeto, tamanio_maximo, criterio):
+    # Generamos todas las palabras posibles con el alfabeto y el tamaño máximo
+    palabras = generar_palabras(alfabeto, tamanio_maximo)
+
+    # Creamos una lista vacía para almacenar las palabras que cumplen el criterio
+    palabras_filtradas = []
+
+    # Recorremos cada palabra generada
+    for palabra in palabras:
+        # Verificamos si la palabra cumple con el criterio
+        if criterio(palabra):
+            # Si cumple, la añadimos a la lista de palabras filtradas
+            palabras_filtradas.append(palabra)
+
+    # Devolvemos la lista de palabras que cumplen el criterio
+    return palabras_filtradas
+
+# Ejemplo de uso
+alfabeto = {'a', 'b'}
+tamanio_maximo = 4
+
+# Generar el lenguaje L2 con palabras que tienen una cantidad impar de 'b's
+L2 = generar_lenguaje(alfabeto, tamanio_maximo, tiene_impar_b)
+
+# Imprimir el lenguaje generado
+print("L2:", L2)
