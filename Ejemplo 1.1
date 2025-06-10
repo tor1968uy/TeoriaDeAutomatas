@@ -1,0 +1,40 @@
+##### Verificador básico de expresión regular**
+
+**Descripción del problema**
+
+Queremos simular una expresión regular simple que describe el lenguaje:
+
+$$\text{Palabras sobre el alfabeto } \Sigma =\{a,b\} \text{ que terminan con la subcadena }``ab".$$
+
+**Expresión regular objetivo:**
+```regex
+(a|b)*ab
+```
+
+**Objetivo**
+- Utilizar expresiones regulares en Python para validar palabras.
+- Entender el paralelismo entre definiciones teóricas y herramientas reales.
+
+**Entradas**
+- Una palabra $w \in  \{a,b\}^*$ (cadena de texto).
+
+**Salidas**
+- Mensaje indicando si la palabra pertenece o no al lenguaje.
+
+**OBS**: Documentación del paquete Python [RE](https://docs.python.org/3/library/re.html).
+"""
+
+import re
+
+expresion_regular = r"(a|b)*ab"
+
+def verificar_palabra(palabra):
+    if re.fullmatch(expresion_regular, palabra):
+        print(f"La palabra '{palabra}' es válida ✅")
+    else:
+        print(f"La palabra '{palabra}' no pertenece al lenguaje ❌")
+
+# Ejemplo
+verificar_palabra("aab")
+verificar_palabra("abba")
+verificar_palabra("abab")
