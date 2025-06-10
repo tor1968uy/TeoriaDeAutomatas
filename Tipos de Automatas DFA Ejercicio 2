@@ -1,0 +1,82 @@
+"""##### **Ejercicio 2 - Verificación de múltiples palabras**
+
+**Descripción del problema**
+
+Queremos modificar el programa para verificar múltiples palabras a la vez y mostrar cuáles son aceptadas.
+
+**Objetivo**
+- Permitir que el usuario ingrese una lista de palabras y verificar cada una.
+
+**Instrucciones:**
+1. Modifica el código del ejercicio anterior para aceptar una lista de palabras.
+2. La salida debe mostrar `"Aceptada"` o `"Rechazada"` para cada palabra.
+3. Prueba con la lista `["01", "001", "1101", "1001"]`.
+
+**Ejemplo de salida esperada:**
+```python
+Palabra: 01 -> Aceptada
+Palabra: 001 -> Rechazada
+Palabra: 1101 -> Aceptada
+Palabra: 1001 -> Aceptada
+```
+"""
+
+def simular_dfa(estado_inicial, estados_aceptacion, transiciones, palabra):
+    estado_actual = estado_inicial
+
+    for simbolo in palabra:
+        if (estado_actual, simbolo) in transiciones:
+            estado_actual = transiciones[(estado_actual, simbolo)]
+        else:
+            return "Rechazada"  # No hay transición definida
+
+    return "Aceptada" if estado_actual in estados_aceptacion else "Rechazada"
+
+def validar_palabra(palabra, alfabeto):
+    return all(simbolo in alfabeto for simbolo in palabra)
+
+
+# Definición del DFA
+estados = {"q0", "q1", "q2"}  # Estados posibles
+alfabeto = {"0", "1"}          # Alfabeto permitido
+estado_inicial = "q0"          # Estado inicial
+estados_aceptacion = {"q2"}    # Estados de aceptación
+
+# Función de transición (δ) representada como diccionario
+transiciones = {
+    ("q0", "0"): "q1",  # Desde q0, con '0' va a q1
+    ("q0", "1"): "q1",  # Desde q0, con '1' sigue en q0
+    ("q1", "0"): "q0",  # Desde q1, con '0' va a q2
+    ("q1", "1"): "q2",  # Desde q1, con '1' vuelve a q0
+    ("q2", "0"): "q1",  # Desde q2, con '0' sigue en q2
+    ("q2", "1"): "q0"   # Desde q2, con '1' sigue en q2
+}
+
+
+# Ejemplos predefinidos
+ejemplos = ["01", "001", "1101", "1001"]
+print("\n=== Pruebas Automáticas ===")
+for ejemplo in ejemplos:
+    if validar_palabra(ejemplo, alfabeto):
+        resultado = simular_dfa(estado_inicial, estados_aceptacion, transiciones, ejemplo)
+        print(f"'{ejemplo}' → {resultado}")
+    else:
+        print(f"'{ejemplo}' → Error: Contiene símbolos no válidos")
+
+# Entrada de usuario
+palabra = ' '
+print("\n=== Modo Interactivo ===")
+print("Ingrese palabras una por una. Presione Enter sin escribir para terminar.")
+lista_palabras = []
+while palabra != '':
+   palabra = input("Ingrese una palabra: ")
+   if palabra != '' :
+      lista_palabras.append(palabra)
+
+print("\n=== Resultados ===")
+for i, palabra in enumerate(lista_palabras, 1):
+    if validar_palabra(palabra, alfabeto):
+        resultado = simular_dfa(estado_inicial, estados_aceptacion, transiciones, palabra)
+        print(f"Palabra {i}: '{palabra}' → {resultado}")
+    else:
+        print(f"Palabra {i}: '{palabra}' → Error: Contiene símbolos no válidos")
