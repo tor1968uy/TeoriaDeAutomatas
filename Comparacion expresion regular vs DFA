@@ -1,0 +1,95 @@
+"""##### **Ejercicio 3 - Comparación ER vs DFA**
+
+**Descripción del problema**
+
+Dada una expresión regular y un DFA equivalente (representado como función), comprobá si ambos reconocen exactamente el mismo conjunto de palabras.
+
+**Expresión regular:**
+```regex
+(a|b)*abb
+```
+
+**Objetivo**
+- Implementar un DFA simple.
+- Comparar su resultado con la verificación por ER.
+
+**Entradas**
+- Lista de palabras a probar.
+
+**Salidas**
+- Resultado para cada palabra: ?'ambos métodos coinciden?
+
+**Instrucciones**
+1. Escribí una función `verificar_dfa(palabra)` que simule un DFA para el lenguaje de palabras que terminan en `abb`.
+2. Usá `re.fullmatch(...)` para verificar con ER.
+3. Compará ambos resultados y mostrálos juntos.
+"""
+
+import re
+
+# Expresión regular: (a|b)*abb
+expresion_regular = r"(a|b)*abb"
+
+def verificar_dfa(palabra):
+    # Simula un DFA para el lenguaje de palabras que terminan en "abb".
+    # Args:
+    #    palabra (str): La palabra a verificar.
+    # Returns:
+    #    bool: True si la palabra es aceptada por el DFA, False en caso contrario.
+    ################################################################################
+    #           |   a   |   b   |
+    #      qo   |  q1   |  q0   | <= Estado Inicial q0
+    #      q1   |  q1   |  q2   |
+    #      q2   |  q1   |  q3   |
+    #      q3   |  q1   |  q0   | <= estado de aceptacion q3
+
+    estado = 0  # Estado inicial
+    for simbolo in palabra:
+        if estado == 0:
+            if simbolo == 'a' :
+                estado = 1
+            elif simbolo == 'b':
+                estado = 0
+        elif estado == 1:
+            if simbolo == 'a':
+                estado = 1
+            elif simbolo == 'b':
+                estado = 2
+
+        elif estado == 2:
+            if simbolo == 'a':
+                estado = 1
+            elif simbolo == 'b':
+                estado = 3
+
+        elif estado == 3:
+            if simbolo == 'a':
+                estado = 1
+            elif simbolo == 'b':
+                estado = 0
+       # print(palabra, estado)
+    return estado == 3
+
+def verificar_palabra_er(palabra):
+    # Verifica si una palabra coincide con la expresión regular usando re.fullmatch().
+    # Args:
+    #    palabra (str): La palabra a verificar.
+    #
+    #Returns:
+    #    bool: True si la palabra coincide con la ER, False en caso contrario.
+
+    return bool(re.fullmatch(expresion_regular, palabra))
+
+# Entradas
+palabras_a_probar = ["abb", "aabb", "abababb", "bbabb", "aaaa", "abba", "baba"]
+
+# Salidas
+print("Resultados de la verificación:")
+print(f"{'Palabra':<10} | {'DFA':<5} | {'ER':<5} | {'Coinciden'}")
+print("-" * 40)
+
+for palabra in palabras_a_probar:
+    resultado_dfa = verificar_dfa(palabra)
+    resultado_er = verificar_palabra_er(palabra)
+    coinciden = resultado_dfa == resultado_er
+    print(f"{palabra:<10} | {str(resultado_dfa):<5} | {str(resultado_er):<5} |   {str(coinciden):<5}")
