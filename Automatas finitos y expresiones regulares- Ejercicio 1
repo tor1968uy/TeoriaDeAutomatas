@@ -1,0 +1,45 @@
+"""##### **Ejercicio 1: Verificador con patrón diferente**
+
+**Descripción del problema**
+
+Queremos modificar el código del ejemplo para validar palabras que:
+
+$$\text{Contienen al menos una letra }``b"\text{ y terminan en }``a".$$
+
+**Expresión regular esperada:**
+```regex
+(a|b)*b(a|b)*a
+```
+
+**Objetivo**
+- Adaptar el patrón de la expresión regular.
+- Comprender cómo varía el lenguaje definido.
+
+**Entradas**
+- Una palabra $w \in \{a,b\}^*$
+
+**Salidas**
+- Mensaje de aceptación o rechazo.
+
+**Instrucciones**
+1. Reutilizá el código del ejemplo.
+2. Reemplazá la expresión regular por una que cumpla con la condición.
+3. Verificá con palabras como: `"ba"`, `"baba"`, `"aa"`, `"aabba"`.
+"""
+
+import re
+
+expresion_regular = r"(a|b)*b(a|b)*a"
+
+def verificar_palabra(palabra):
+    if re.fullmatch(expresion_regular, palabra):
+        print(f"La palabra '{palabra}' es válida ✅")
+    else:
+        print(f"La palabra '{palabra}' no pertenece al lenguaje ❌")
+
+# Ejemplo
+verificar_palabra("ba")
+verificar_palabra("baba")
+verificar_palabra("aa")
+verificar_palabra("aabba")
+verificar_palabra("bab")
