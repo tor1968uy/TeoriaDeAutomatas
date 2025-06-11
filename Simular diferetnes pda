@@ -1,0 +1,227 @@
+##### **Ejemplo 1: PDA para $L=\{0^n1^m2^{n+m}\}$.**
+
+**Descripción del problema:**
+
+Queremos construir un simulador de un PDA que acepte palabras donde:
+- la cantidad de símbolos `2` es igual a la suma de símbolos `0` y `1`.
+
+**Objetivo:**
+- Utilizar una pila para representar cantidades de `0` y `1`, y luego desapilar con cada `2`.
+- Aceptar si la pila queda vacía al final.
+
+**Entradas:**
+- Una cadena de símbolos $\in \{0,1,2 \}$
+
+**Salida:**
+- `True` si la palabra es aceptada, `False` si no.
+"""
+
+def pda_012(palabra):
+    pila = []
+    estado = 'q0'  # Estado inicial
+
+    for simbolo in palabra:
+        if estado == 'q0':
+            if simbolo == '0':
+                pila.append('X')  # Contamos los 0 apilando 'X'
+            elif simbolo == '1':
+                estado = 'q1'
+                pila.append('Y')  # Primer 1: pasamos a fase 1 y apilamos 'Y'
+            elif simbolo == '2':
+                return False  # No se puede empezar con 2
+            else:
+                return False  # Símbolo inválido
+
+        elif estado == 'q1':
+            if simbolo == '1':
+                pila.append('Y')  # Seguimos contando los 1 con 'Y'
+            elif simbolo == '2':
+                estado = 'q2'
+                if not pila:
+                    return False  # No hay nada que desapilar
+                pila.pop()  # Desapilamos por cada 2
+            else:
+                return False
+
+        elif estado == 'q2':
+            if simbolo == '2':
+                if not pila:
+                    return False  # No hay más símbolos que desapilar
+                pila.pop()
+            else:
+                return False  # No se permite volver a 0 o 1 en esta fase
+
+    return estado == 'q2' and not pila  # Aceptamos si pila vacía al final y estado en q2
+
+
+
+print(pda_012("00112222"))      # ✅ True
+print(pda_012("01122"))         # ❌ False (1 antes de 0)
+print(pda_012("11002222"))      # ❌ False (mezcla inválida)
+print(pda_012("000111222222"))  # ✅ True
+print(pda_012("222"))           # ❌ False (sin 0s ni 1s)
+print(pda_012("00110022"))      # ❌ False (cantidad de 2 incorrecta)
+
+"""##### **Ejercicio 1: Adaptación del ejemplo para $L=\{a^mb^{m+n}c^n\}$**
+
+**Descripción del problema:**
+
+Modificar el ejemplo anterior para simular un PDA que reconozca palabras de la forma:
+$$ L=\{a^mb^{m+n}c^n|m,n\geqslant 1\}$$
+
+**Objetivo:**
+- Contar la cantidad de `a` (apilar A).
+- En `b`, primero desapilar A (una por cada b), luego apilar C.
+- En `c`, desapilar C.
+- Aceptar si la pila queda vacía.
+
+**Instrucciones:**
+1. Copia el código del ejemplo.
+2. Agrega dos fases de apilamiento/desapilamiento.
+3. Verifica con ejemplos como `"abcc"`, `"aabbbccc"`, `"abbc"`, `"ab"`.
+"""
+
+def pda_abc(palabra):
+    pila = []
+    estado = 'q0'  # q0: leyendo 'a' (y "apila" A),
+                   # q1: leyendo 'b' (Desapila A y cuando vacia la cola apila C),
+                   # q2: leyendo 'c' (Desapila C)
+
+    for simbolo in palabra:
+        if estado == 'q0':
+            if simbolo == 'a':
+                pila.append('A')
+            elif simbolo == 'b':
+                estado = 'q1'
+                if pila and pila[-1] == 'A':
+                    pila.pop()  # 'b' emparejado con 'a'
+                else:
+                    pila.append('B')  # exceso de 'b' (parte n)
+            else:
+                return False  # símbolo inválido (ni "a" ni "b") en q0
+
+        elif estado == 'q1':
+            if simbolo == 'b':
+                if pila and pila[-1] == 'A':
+                    pila.pop()
+                else:
+                    pila.append('B')
+            elif simbolo == 'c':
+                estado = 'q2'
+                if pila and pila[-1] == 'B':
+                    pila.pop()
+                else:
+                    return False  # sin 'B' que corresponda con una 'c'
+            else:
+                return False  # símbolo inválido (ni "a" ni "b") en q1
+
+        elif estado == 'q2':
+            if simbolo == 'c':
+                if pila and pila[-1] == 'B':
+                    pila.pop()
+                else:
+                    return False
+            else:
+                return False  # no se permite volver a 'a' o 'b'
+
+    return estado == 'q2' and not pila  # Aceptar si la pila está vacía
+
+
+# Pruebas
+print(pda_abc("aaabbbccc"))     # ❌ False
+print(pda_abc("aaabbbbcc"))     # ❌ False
+print(pda_abc("abbbc"))         # ❌ False
+print(pda_abc("abbc"))          # ✅ True (m=1, n=1)
+print(pda_abc("aaabbbbbbccc"))  # ✅ True (m=3, n=3)
+print(pda_abc("aabbbbbcccc"))   # ❌ False
+print(pda_abc("aaabbbcc"))      # ❌ False
+print(pda_abc("bbbccc"))        # ✅ True (m=0, n=3)
+
+"""#####**Ejercicio 2 — Simulación declarativa con tabla de transiciones**
+
+**Descripción del problema:**
+
+Representar el autómata anterior con una tabla de transiciones (como en el estilo NFA), donde:
+
+```python
+transiciones = {
+    ("q0", "a", None): [("q0", "A")],
+    ("q0", "b", "A"): [("q1", None)],
+    ("q1", "b", "A"): [("q1", None)],
+    ("q1", "b", None): [("q1", "C")],
+    ("q1", "c", "C"): [("q2", None)],
+    ("q2", "c", "C"): [("q2", None)],
+    ("q2", None, None): [("qf", None)],
+}
+```
+
+**Objetivo:**
+- Implementar una función `simular_pda_transiciones(...)`
+- Validar si una palabra es aceptada con esta tabla
+- Pista: mantener una lista de configuraciones como `(estado, índice, pila)`
+"""
+
+def simular_pda_transiciones(transiciones, palabra, estado_inicial="q0", estado_final="qf"):
+    from collections import deque
+
+    configuraciones = deque()
+    configuraciones.append((estado_inicial, 0, []))  # estado, índice de palabra, pila
+
+    while configuraciones:
+        estado, i, pila = configuraciones.popleft()
+
+        # Aceptación. Toda la palabra porcesda y estado de aceptacion y pila vacia
+        if i == len(palabra) and not pila and estado == estado_final:
+           return True
+
+        # Obtener símbolo actual de la palabra (None si ya terminó)
+        simbolo = palabra[i] if i < len(palabra) else None
+
+        tope = pila[-1] if pila else None
+
+        # Probar todas las transiciones posibles definidas en el diccionario (estado, símbolo, tope)
+        claves_posibles = [
+            (estado, simbolo, tope),
+            (estado, simbolo, None),
+            (estado, None, tope),
+            (estado, None, None)
+        ]
+
+        for clave in claves_posibles:
+            if clave in transiciones:
+                for nuevo_estado, accion_pila in transiciones[clave]:
+                    nueva_pila = pila.copy()
+
+                    # Desapilar
+                    if clave[2] is not None:
+                        if not nueva_pila or nueva_pila[-1] != clave[2]:
+                            continue
+                        nueva_pila.pop()
+
+                    # Apilar
+                    if accion_pila is not None:
+                        nueva_pila.append(accion_pila)
+
+                    # Avanzar si se consumió un símbolo
+                    nuevo_i = i + 1 if clave[1] is not None else i
+
+                    configuraciones.append((nuevo_estado, nuevo_i, nueva_pila))
+
+    return False
+
+transiciones = {
+    ("q0", "a", None): [("q0", "A")],   # Este NONE se aplica tanto a pila vacia como a ignorar que hay en el top de la fila se corrigio el codigo para eso
+    ("q0", "b", "A"): [("q1", None)],
+    ("q1", "b", "A"): [("q1", None)],
+    ("q1", "b", None): [("q1", "C")],   # Este NONE se aplica tanto a pila vacia como a ignorar que hay en el top de la fila se corrigio el codigo para eso
+    ("q1", "c", "C"): [("q2", None)],
+    ("q2", "c", "C"): [("q2", None)],
+    ("q2", None, None): [("qf", None)],
+}
+
+print(simular_pda_transiciones(transiciones, "aaabbbccc"))     # ❌ False
+print(simular_pda_transiciones(transiciones, "aabbbbcc"))      # ✅ True
+print(simular_pda_transiciones(transiciones, "abbbc"))         # ❌ False
+print(simular_pda_transiciones(transiciones, "bbbccc"))        # ❌ False
+print(simular_pda_transiciones(transiciones, "aaabbbcc"))      # ❌ False
+print(simular_pda_transiciones(transiciones, "aabbbbbccc"))    # ✅ True
