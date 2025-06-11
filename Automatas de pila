@@ -1,0 +1,390 @@
+##### **Ejemplo 0: Simulación de una gramática para $a^nb^n$.**
+
+**Descripción del problema:**
+
+Queremos verificar si una palabra formada por una cantidad igual de letras `a` seguidas por la misma cantidad de letras `b` puede ser generada por una gramática libre de contexto.
+
+**Objetivos:**
+- Implementar un simulador básico de GLC.
+- Representar la gramática como un conjunto de reglas.
+- Verificar si una cadena pertenece al lenguaje generado.
+
+**Gramática definida:**
+$$S \to aSb ~|~ \varepsilon $$
+
+**Representación:**
+```python
+gramatica = [
+    ("S", ["a", "S", "b"]),
+    ("S", [])
+]
+```
+"""
+
+# Función principal de análisis recursivo
+def parse(palabra, simbolo, i):
+    # Caso base: producción vacía, no se consume ningún símbolo
+    if simbolo == []:
+        return [i]
+
+    # Si el primer símbolo es terminal
+    if isinstance(simbolo[0], str) and simbolo[0] not in [r[0] for r in gramatica]:
+        if i < len(palabra) and palabra[i] == simbolo[0]:
+            # Coincide: seguimos analizando el resto
+            return parse(palabra, simbolo[1:], i + 1)
+        else:
+            return []
+
+    # Si es un no terminal (como 'S'), exploramos las reglas aplicables
+    resultados = []
+    for cabeza, cuerpo in gramatica:
+        if simbolo[0] == cabeza:
+            posiciones_finales = parse(palabra, cuerpo, i)
+            for j in posiciones_finales:
+                continuaciones = parse(palabra, simbolo[1:], j)
+                resultados.extend(continuaciones)
+
+    return resultados
+
+# Función auxiliar: determina si la palabra completa puede ser derivada desde S
+def pertenece(palabra):
+    finales = parse(palabra, ["S"], 0)
+    return len(palabra) in finales
+
+# Gramática: S → aSb | ε
+# Representamos ε como una lista vacía []
+
+# Reglas de producción representadas como tuplas: (NO_TERMINAL, EXPANSIÓN)
+gramatica = [
+    ("S", ["a", "S", "b"]),
+    ("S", [])  # Representa la producción S → ε
+]
+
+# Pruebas
+palabras = ["ab", "aabb", "aaabbb", "aabbb"]
+for palabra in palabras:
+    print(f"'{palabra}' → {'Sí' if pertenece(palabra) else 'No'}")
+
+"""#####**Ejercicio 1 — Gramática para $a^nb^{2n}$**
+
+**Descripción del problema**
+
+Queremos construir una gramática libre de contexto (GLC) que genere exactamente las palabras del lenguaje:
+$$ L = \{ a^nb^{2n} \, | \, n\geqslant 0\}$$
+
+Es decir, por cada letra a generada al principio, deben aparecer exactamente **dos letras $b$** al final.
+
+**Objetivos**
+- Diseñar una gramática que controle proporciones no simétricas (1 a → 2 b).
+- Simular su comportamiento usando derivaciones por la izquierda.
+- Verificar que el lenguaje generado respeta la condición $|b| = 2\cdot |a|$.
+
+**Una posible gramática**
+$$ S \to aSbb\, |\, \varepsilon $$
+"""
+
+# Función principal de análisis recursivo
+def parse(palabra, simbolo, i):
+    # Caso base: producción vacía, no se consume ningún símbolo
+    if simbolo == []:
+        return [i]
+
+    # Si el primer símbolo es terminal
+    if isinstance(simbolo[0], str) and simbolo[0] not in [r[0] for r in gramatica]:
+        if i < len(palabra) and palabra[i] == simbolo[0]:
+            # Coincide: seguimos analizando el resto
+            return parse(palabra, simbolo[1:], i + 1)
+        else:
+            return []
+
+    # Si es un no terminal (como 'S'), exploramos las reglas aplicables
+    resultados = []
+    for cabeza, cuerpo in gramatica:
+        if simbolo[0] == cabeza:
+            posiciones_finales = parse(palabra, cuerpo, i)
+            for j in posiciones_finales:
+                continuaciones = parse(palabra, simbolo[1:], j)
+                resultados.extend(continuaciones)
+
+    return resultados
+
+# Función auxiliar: determina si la palabra completa puede ser derivada desde S
+def pertenece(palabra):
+    finales = parse(palabra, ["S"], 0)
+    return len(palabra) in finales
+
+# Gramática: S → aSb | ε
+# Representamos ε como una lista vacía []
+
+# Reglas de producción representadas como tuplas: (NO_TERMINAL, EXPANSIÓN)
+gramatica = [
+    ("S", ["a", "S", "b","b"]),
+    ("S", [])  # Representa la producción S → ε
+]
+
+# Pruebas
+palabras = ["abb", "aabbb", "aaabbbbbb", "aabbb"]
+for palabra in palabras:
+    print(f"'{palabra}' → {'Sí' if pertenece(palabra) else 'No'}")
+
+"""##### **Ejercicio 2: Palabras con paréntesis balanceados**
+
+**Descripción del problema:**
+
+Queremos verificar si una palabra compuesta por paréntesis correctamente anidados puede ser generada por una gramática libre de contexto (GLC).
+
+**Objetivos:**
+- Definir una gramática que genera paréntesis bien balanceados.
+- Reutilizar el simulador del ejemplo anterior para probar diferentes cadenas.
+- Reconocer la estructura recursiva propia de este tipo de lenguaje.
+
+**Gramática:**
+$$ S\to (S)S\,∣\, \varepsilon $$
+
+**¿Por qué este ejercicio es interesante?**
+
+La gramática $S\to (S)S\,|\,\varepsilon$ no solo genera una cantidad balanceada de paréntesis, como ocurre en $a^nb^n$, sino que también captura la estructura jerárquica y anidada típica de expresiones matemáticas, bloques de código y sintaxis de lenguajes de programación.
+
+A diferencia de $S\to aSb$, donde cada a abre y cada b cierra en secuencia lineal, esta gramática permite:
+- Agrupar bloques de paréntesis dentro de otros.
+- Encadenar secuencias balanceadas.
+- Representar la anidación profunda de forma natural y recursiva.
+
+Este tipo de estructura no puede ser capturada por autómatas finitos, pero sí por GLC y autómatas de pila.
+Por eso es uno de los ejemplos más clásicos y potentes del uso de GLC.
+
+**Instrucciones**
+1. Reemplazá la gramática del ejemplo anterior por la nueva definición.
+2. Probá con las siguientes palabras:
+- `"()"`
+- `"(())"`
+- `"(()())"`
+- `"((()"`
+- `"())("`
+3. Observá cuáles cadenas son aceptadas y cuáles no.
+"""
+
+# Función principal de análisis recursivo
+def parse(palabra, simbolo, i):
+    # Caso base: producción vacía, no se consume ningún símbolo
+    if simbolo == []:
+        return [i]
+
+    # Si el primer símbolo es terminal
+    if isinstance(simbolo[0], str) and simbolo[0] not in [r[0] for r in gramatica]:
+        if i < len(palabra) and palabra[i] == simbolo[0]:
+            # Coincide: seguimos analizando el resto
+            return parse(palabra, simbolo[1:], i + 1)
+        else:
+            return []
+
+    # Si es un no terminal (como 'S'), exploramos las reglas aplicables
+    resultados = []
+    for cabeza, cuerpo in gramatica:
+        if simbolo[0] == cabeza:
+            posiciones_finales = parse(palabra, cuerpo, i)
+            for j in posiciones_finales:
+                continuaciones = parse(palabra, simbolo[1:], j)
+                resultados.extend(continuaciones)
+
+    return resultados
+
+# Función auxiliar: determina si la palabra completa puede ser derivada desde S
+def pertenece(palabra):
+    finales = parse(palabra, ["S"], 0)
+    return len(palabra) in finales
+
+# Gramática: S → aSb | ε
+# Representamos ε como una lista vacía []
+
+# Reglas de producción representadas como tuplas: (NO_TERMINAL, EXPANSIÓN)
+gramatica = [
+    ("S", ["(","S",")", "S"]),
+    ("S", [])  # Representa la producción S → ε
+]
+
+# Pruebas
+palabras = ["()","(())","(()())","((()","())("]
+for palabra in palabras:
+    print(f"'{palabra}' → {'Sí' if pertenece(palabra) else 'No'}")
+
+"""#####**Ejercicio 3 — Análisis de un verificador sintáctico para expresiones aritméticas**
+
+**Descripción del problema**
+
+A continuación se presenta una gramática que genera expresiones aritméticas simples con letras `a`, utilizando los operadores `+` (suma) y `*` (multiplicación), respetando la precedencia estándar:
+$$ E \to T\,E'$$
+$$ E' \to + T\,E'\, | \, \varepsilon$$
+$$ T \to F\,T'$$
+$$ T' \to * F\,T'\, | \, \varepsilon$$
+$$ F \to a $$
+
+El siguiente código implementa un parser recursivo que verifica si una palabra dada puede ser generada por la gramática:
+"""
+
+def parse_nuevo(palabra, simbolo, i):
+    if simbolo == []:
+        return [i]
+
+    if isinstance(simbolo[0], str) and simbolo[0] not in [r[0] for r in gramatica]:
+        if i < len(palabra) and palabra[i] == simbolo[0]:
+            return parse_nuevo(palabra, simbolo[1:], i + 1)
+        else:
+            return []
+
+    resultados = []
+    for cabeza, cuerpo in gramatica:
+        if simbolo[0] == cabeza:
+            posiciones_finales = parse_nuevo(palabra, cuerpo, i)
+            for j in posiciones_finales:
+                continuaciones = parse_nuevo(palabra, simbolo[1:], j)
+                resultados.extend(continuaciones)
+
+    return resultados
+
+def pertenece_nuevo(palabra):
+    finales = parse_nuevo(palabra, ["E"], 0)
+    return len(palabra) in finales
+
+
+# Gramatica
+gramatica = [
+    ("E", ["T", "E'"]),
+    ("E'", ["+", "T", "E'"]),
+    ("E'", []),
+    ("T", ["F", "T'"]),
+    ("T'", ["*", "F", "T'"]),
+    ("T'", []),
+    ("F", ["a"])
+]
+
+# Pruebas
+palabras = ["a", "a+a", "a*a", "a+a*a", "a*a+a", "a+a+", "a*"]
+resultados = {p: "Sí" if pertenece_nuevo(p) else "No" for p in palabras}
+resultados
+
+"""---
+
+###### Campo de respuesta
+
+A continuación, escribí tus reflexiones sobre el código analizado:
+
+1. ¿Qué ocurriría si lo usamos con una gramática como `S → aSb | ε`?
+   - _Tu respuesta:_
+
+2. ¿Y con la gramática de paréntesis balanceados `S → (S)S | ε`?
+   - _Tu respuesta:_
+
+3. ¿En qué se diferencia este código de los simuladores anteriores que probamos para derivaciones por la izquierda?
+   - _Tu respuesta:_
+
+4. ¿Por qué este parser funciona correctamente con la gramática dada para expresiones aritméticas?
+   - _Tu respuesta:_
+---
+
+1) Este parser funcionaría correctamente con esta gramática.
+
+El parser (analizador) comenzaría intentando alinear la palabra con "S" desde el índice 0.
+Para alinear "S", tiene dos reglas: aSb y ε.
+
+Si prueba aSb:
+Intentará alinear 'a' en el lugartual (i). Si coincide, avanza el índice (i+1).
+Luego intentará alinear "S" desde el nuevo índice. Esto es una llamada recursiva a parse_nuevo para la subcadena ["S"] empezando después de la 'a'.
+
+Para este "S" interno, probará de nuevo aSb o ε. Si encuentra otro par a...b, la recursión continúa. Si llega a una "S" que debe alinear una subcadena vacía (la regla ε), parse_nuevo con [] devolverá el índice actual.
+
+Una vez que la llamada recursiva para el "S" interno termina en alguna posición j, el parser intentará alinear 'b' comenzando desde esa posición j.
+
+Si la 'b' coincide, avanzará el índice a j+1.
+
+Finalmente, después de alinear ["a", "S", "b"] hasta el índice k, intentará alinear lo que quede de la lista de símbolos original (["S"] en este caso, lo cual es [] porque "S" era el único símbolo) a partir del índice k. Si la lista de símbolos restante está vacía (como aquí), parse_nuevo devolverá [k].
+
+Si prueba ε:
+La regla [] empareja inmediatamente la cadena vacía y parse_nuevo devolverá el lugar actual [i]. Luego, intentará alinear el resto de la lista de símbolos original (que está vacía) desde i, devolviendo [i].
+
+El backtracking permite que el parser explore todas las posibilidades. Por ejemplo, para aabb, primero podría intentar S → aSb, el "S" interno también S → aSb (falla porque la siguiente letra es 'b'), luego el "S" interno prueba S → ε, lo cual empareja la cadena vacía entre las dos 'a's. Luego empareja las 'b's. Si esa ruta falla, retrocedería y probaría otras combinaciones (aunque para esta gramática, esta es la única ruta exitosa para aabb).
+
+2) Gramática: [("S", ["(", "S", ")", "S"]), ("S", [])]
+Símbolo inicial: "S" (requeriría el mismo cambio en pertenece_nuevo).
+
+Este parser también funcionaría correctamente con esta gramática.
+
+Comienza intentando alinear "S" desde el índice 0.
+
+Para "S", prueba (S)S o ε.
+
+Si prueba (S)S:
+Empareja '('. Si coincide, avanza.
+
+Empareja el primer "S" recursivamente desde la nueva posición. Este "S" puede alinear otro patrón (S)S (anidamiento) o ε.
+
+Una vez que el primer "S" interno termina en el lugar j, intenta alinear ')' desde j. Si coincide, avanza.
+
+Una vez que ')' coincide y termina en k, intenta alinear el segundo "S" desde k. Este segundo "S" manejará la concatenación de patrones (por ejemplo, ()() es S → (S)S donde el primer S es ε y el segundo S es (), que a su vez es (S)S con el primer S como ε y el segundo S como ε).
+
+Si prueba ε:
+Empareja la cadena vacía en el lugar actual.
+
+La naturaleza recursiva y el backtracking permiten que explore estructuras anidadas como (()) y concatenaciones como ()(), así como la cadena vacía ε.
+
+3) La diferencia principal es el objetivo y el proceso:
+
+Simuladores de derivación por la izquierda (generativos):
+Objetivo: Es un generador de derivaciones que busca una derivación específica.
+
+Su meta es generar secuencias de símbolos (formas sentenciales) a partir de un símbolo inicial y buscar si una de esas secuencias generadas coincide con la palabra_objetivo.
+
+Enfoque: Búsqueda en amplitud (BFS) en el espacio de las derivaciones. Utiliza una cola (deque) para explorar sistemáticamente todas las posibles derivaciones paso a paso, nivel por nivel (primero todas las derivaciones de un paso, luego de dos, etc.). No opera directamente emparejando una palabra de entrada, sino aplicando reglas de producción a las formas sentenciales generadas. Añade un control de longitud para optimizar la búsqueda hacia una palabra objetivo específica. Devuelve la secuencia de formas sentenciales que constituyen la derivación encontrada.
+
+Dirección: Realiza derivaciones por la izquierda explícitas (sustituye el primer no terminal que encuentra en cada forma sentencial).
+
+Este código (parser recognizador):
+Tiene como objetivo reconocer si una palabra de entrada pertenece al lenguaje definido por la gramática. Lo hace intentando construir un parseo (una forma de árbol de derivación implícita) que empareje la palabra de entrada de izquierda a derecha, partiendo del símbolo inicial y aplicando reglas. Es un proceso de análisis, no de generación.
+
+Aunque este parser desciende recursivamente y podría considerarse que sigue un camino similar a una derivación por la izquierda (en cómo consume la entrada), su lógica se centra en "alinear la entrada con la gramática" en lugar de "expandir símbolos para generar la entrada".
+
+El backtracking ("vuelta atras" o "retroceso") es la clave:
+
+Si una elección de regla no lleva a un emparejamiento completo de la entrada, retrocede para probar otra alternativa, algo que no es típico en un simulador de derivación por la izquierda que normalmente descarta las combinaciones que no se ajustan a la cadena que desea validar.
+
+4) La gramática dada:
+
+    gramatica = [   
+    ("E", ["T", "E'"]),
+    ("E'", ["+", "T", "E'"]),
+    ("E'", []),
+    ("T", ["F", "T'"]),
+    ("T'", ["*", "F", "T'"]),
+    ("T'", []),
+    ("F", ["a"])
+    ]
+
+Es una gramática de expresiones aritméticas que ha sido transformada para ser apta para analisis (parsing) descendente.
+
+La regla E → T E' dice que una expresión E es un término T seguido opcionalmente por más términos T separados por + (manejado por E').
+
+La regla E' → + T E' maneja la parte recursiva de la suma: un +, seguido de un T, seguido opcionalmente por más sumas (E').
+
+La regla E' → [] (ε) permite que la parte de suma opcional (E') termine.
+
+T → F T' y T' → * F T' | [] hacen lo mismo para la multiplicación y los factores F.
+
+F → a define el caso base (un factor es el terminal 'a').
+
+Este parser funciona bien porque:
+
+Es descendente recursivo: La estructura de las funciones (parse_nuevo llamándose a sí misma) mapea directamente la estructura recursiva de las reglas de la gramática (E depende de T y E', E' depende de T y E', etc.).
+
+Maneja concatenación: Cuando una regla tiene una secuencia de símbolos (ej: ["T", "E'"] o ["+", "T", "E'"]), el código parsea el primer símbolo, obtiene las posiciones finales, y luego usa esas posiciones para empezar a parsear el resto de la secuencia de símbolos (usando simbolo[1:]). Esto empareja correctamente la concatenación en la gramática.
+
+Maneja alternativas:
+Para un no terminal (simbolo[0]), el bucle "for cabeza, cuerpo in gramatica:" prueba todas las reglas posibles (if simbolo[0] == cabeza:). Si la primera regla intentada no lleva a un parseo completo que llegue al final de la cadena (o a una posición válida para continuar), el backtracking (que resultados recoge todas las continuaciones de todas las ramas con "exito") permite que se consideren los resultados de probar otras reglas.
+
+Maneja la eliminación de recursión por la izquierda:
+La gramática está diseñada para parsing descendente, evitando la recursión inmediata.
+El parser puede seguir las reglas
+    E → T E',
+    T → F T',
+    F → a
+sin entrar en bucles infinitos porque el primer símbolo en el cuerpo de la regla no es el mismo no terminal de la cabeza.
+"""
