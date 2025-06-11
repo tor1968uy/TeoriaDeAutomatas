@@ -1,0 +1,435 @@
+#### **Introducción a las Máquinas de Turing**
+Las Máquinas de Turing (MT) son uno de los modelos más poderosos de la teoría de la computación. A diferencia de los autómatas finitos o los autómatas de pila, una MT puede:
+- leer y escribir en una cinta infinita (memoria),
+- mover la cabeza a izquierda o derecha libremente,
+- modificar su comportamiento según lo que encuentra en la cinta.
+
+Este modelo fue propuesto por Alan Turing en 1936, y desde entonces es considerado una base fundamental para definir lo que significa "calcular" o "resolver un problema mediante un algoritmo".
+
+**En esta práctica:**
+
+Vamos a construir simuladores simples de MT usando Python. No intentaremos cubrir toda su potencia, pero sí nos enfocaremos en:
+- entender cómo procesan palabras,
+- verificar si una cinta es aceptada o no,
+- y explorar algunas de las ideas que permiten a las MT ir más allá de otros modelos.
+
+##### **Ejemplo 0: Simulador básico de una Máquina de Turing para $L =\{0^n1^n\}$.**
+
+**Descripción del problema:**
+
+Queremos simular una Máquina de Turing que acepte palabras formadas por una cantidad de `1`s seguida por la misma cantidad de `0`s.
+
+Ejemplos aceptados: `"10"`, `"1100"`, `"111000"`
+
+Ejemplos rechazados: `"100"`, `"110"`
+
+**Objetivo**
+- Implementar en Python un simulador que imite una MT simple.
+- Visualizar paso a paso cómo la cinta evoluciona.
+- Comprender cómo una MT puede hacer emparejamientos indirectos (comparación de cantidades).
+
+**Definición de la Máquina de Turing**
+
+Esta MT funciona así:
+1. Busca un `1`, lo marca como `X`.
+2. Luego busca un `0`, lo marca como `Y`.
+3. Repite el proceso hasta emparejar todos los símbolos.
+4. Si quedan símbolos sin emparejar → rechaza.
+"""
+
+def simular_mt(cinta_str, transiciones):
+    cinta = list(cinta_str) + [' ']
+    cabeza = 0
+    estado = estado_inicial
+    passos = 0
+    visitados = set()
+    output = []
+    output.append(f"{'Paso':<5} {'Estado':<10} {'Cinta':<30} {'Cabeza'}")
+
+    while estado != estado_aceptacion and estado != estado_rechazo:
+        if passos > 1000:
+            output.append("⚠️ Bucle detectado. Abortando.")
+            break
+        simbolo = cinta[cabeza]
+        clave = (estado, simbolo)
+        if clave not in transiciones:
+            estado = estado_rechazo
+            break
+        novo_estado, novo_simbolo, direcao = transiciones[clave]
+        cinta[cabeza] = novo_simbolo
+        estado = novo_estado
+        output.append(f"{passos:<5} {estado:<10} {''.join(cinta):<30} {cabeza}")
+        passos += 1
+
+        if direcao == 'R':
+            cabeza += 1
+            if cabeza == len(cinta):
+                cinta.append(' ')
+        elif direcao == 'L':
+            cabeza = max(0, cabeza - 1)
+
+    resultado = "✅ Aceptada" if estado == estado_aceptacion else "❌ Rechazada"
+    output.append(f"\nResultado: {resultado}")
+    return "\n".join(output)
+
+
+# Definición de la Máquina de Turing para L = {1^n0^n}
+transiciones = {
+    ('q0', '1'): ('q1', 'X', 'R'),
+    ('q0', 'X'): ('q0', 'X', 'R'),
+    ('q0', 'Y'): ('q0', 'Y', 'R'),
+    ('q0', '0'): ('q_rech', '0', 'R'),
+    ('q0', ' '): ('q_acept', ' ', 'R'),
+
+    ('q1', '1'): ('q1', '1', 'R'),
+    ('q1', 'Y'): ('q1', 'Y', 'R'),
+    ('q1', '0'): ('q2', 'Y', 'L'),
+    ('q1', ' '): ('q_rech', ' ', 'R'),
+
+    ('q2', '1'): ('q2', '1', 'L'),
+    ('q2', 'Y'): ('q2', 'Y', 'L'),
+    ('q2', 'X'): ('q0', 'X', 'R'),
+}
+
+estado_inicial = 'q0'
+estado_aceptacion = 'q_acept'
+estado_rechazo = 'q_rech'
+
+# Probar con distintas palabras
+print(simular_mt("1100", transiciones))
+
+"""##### **Ejercicio 1: Construí una MT para $L=\{a^nb^mc^{n+m}\mid n , m \geqslant 0\}$**
+
+**Descripción del problema**  
+Queremos construir una Máquina de Turing que acepte palabras donde:
+- hay cualquier cantidad de letras `a`, seguida de
+- cualquier cantidad de letras `b`, seguida de
+- exactamente $n+m$ letras `c`.
+
+**Ejemplos aceptados**
+- `"abc"`
+- `"aabccc"`
+- `"bbcc"`
+- `"aaabbbcccccc"`
+
+**Ejemplos rechazados**
+- `"aabcc"` (faltan `c`)
+- `"aabccccc"` (sobran `c`)
+- `"abcb"` (desorden incorrecto)
+
+**Objetivos**  
+- Pensar una estrategia de marcado usando la cinta.
+- Implementar una MT en Python con estructura de transiciones como en el ejemplo.
+
+**Instrucciones**
+- Diseñá la lógica en papel: ¿cómo emparejar `a` y `b` con `c`?
+- Representá los símbolos marcados con letras auxiliares (`X`, `Y`, etc.).
+- Simulá el comportamiento paso a paso con el esqueleto de código del ejemplo 0.
+
+**Consejo**
+Intentá usar las fases:
+- Fase 1: por cada `a`, buscá y marcá un `c`.
+- Fase 2: por cada `b`, buscá y marcá un `c`.
+- Fase 3: asegurate de que no queden `c` sin marcar → aceptar.
+"""
+
+from tabulate import tabulate
+
+def simular_mt(cinta_str, transiciones):
+    tabla = []
+
+    cinta = list(cinta_str) + [' ']
+    cabeza = 0
+    estado = estado_inicial
+    passos = 0
+    visitados = set()
+
+    while estado != estado_aceptacion and estado != estado_rechazo:
+        if passos > 1000:
+            tabla.append([" ","Bucle", "detectado","Abortando.", '','',''])
+            break
+        simbolo = cinta[cabeza]
+        viejo_estado = estado
+        clave = (estado, simbolo)
+
+        if clave not in transiciones:
+            estado = estado_rechazo
+            break
+        novo_estado, novo_simbolo, direcao = transiciones[clave]
+        cinta_vieja = ''.join(cinta)
+        cinta[cabeza] = novo_simbolo
+        estado = novo_estado
+        tabla.append([passos,viejo_estado, cinta_vieja,cabeza,simbolo,novo_simbolo,novo_estado,direcao])
+        passos += 1
+
+        if direcao == 'R':
+            cabeza += 1
+            if cabeza == len(cinta):
+                cinta.append(' ')
+        elif direcao == 'L':
+            cabeza = max(0, cabeza - 1)
+
+
+    resultado = " Aceptada" if estado == estado_aceptacion else " Rechazada"
+    tabla.append(['Resultado:' ,'',resultado,'','','','',''])
+    return tabla
+
+
+transiciones = {
+
+    # Estado q0: Marca las 'a' (o 'b') y se mueve a la derecha hasta encontrar la primer 'c'
+    ('q0', 'a'): ('q1', 'X', 'R'),      # Reemplaza 'a' con 'X', va a q1 (q1 busca 'c' luego de 'a' )
+    ('q0', 'b'): ('q2', 'Y', 'R'),      # Si encuentra 'b' marca y va a q2 (q2 busca 'c' luego de 'b')
+    ('q0', 'X'): ('q0', 'X', 'R'),      # Ignora 'X' para llegar a la posicion del siguiente caracter no procesado
+    ('q0', 'Y'): ('q0', 'Y', 'R'),      # Ignora 'Y' para llegar a la posicion del siguiente caracter no procesado
+    ('q0', 'Z'): ('q0', 'Z', 'R'),      # Ignora 'Z' para llegar a la posicion del siguiente caracter no procesado
+    ('q0', 'c'): ('q_rech', 'c', 'R'),  # Si encuentra 'c' rechaza (hay c qu eno sse emparejaron con "a" o "b")
+    ('q0', ' '): ('q_acept', '', 'R'),  # Cadena vacía es aceptada (n=0, m=0)
+
+    # Estado q1: Busca la primera "c"  despues de marcar una "a" y la marca
+    ('q1', 'a'): ('q1', 'a', 'R'),      # Ignora 'a's
+    ('q1', 'b'): ('q2', 'b', 'R'),      # Ignora 'b's salta a q2 para que no haya 'a' posteriores
+    ('q1', 'c'): ('q3', 'Z', 'L'),      # Reemplaza 'c' con 'Z', va a q3 (retrocede hasta el inicio de la cinta)
+
+    # Estado q2: Busca la primera "c" luego de marcar una 'b' y la marca
+    ('q2', 'b'): ('q2', 'b', 'R'),      # Ignora 'b's
+    ('q2', 'Z'): ('q2', 'Z', 'R'),      # Ignora 'Z's
+    ('q2', 'c'): ('q3', 'Z', 'L'),      # Reemplaza 'c' con 'Z', va a q3 (para retroceder hasta el inicio de la cinta)
+
+    # Estado q3: Retrocede hasta inicio de cinta o encontrar 'X' o 'Y' (marcadores)
+    ('q3', 'b'): ('q3', 'b', 'L'),      # Retrocede sobre 'b's
+    ('q3', 'a'): ('q3', 'a', 'L'),      # Retrocede sobre 'a's
+    ('q3', 'X'): ('q0', 'X', 'R'),      # Encuentra 'X', vuelve a q0 para procesar la siguiente 'a'
+    ('q3', 'Y'): ('q0', 'Y', 'R'),      # Encuentra 'Y', vuelve a q0 para procesar la siguiente 'b'
+    ('q3', 'Z'): ('q3', 'Z', 'L'),      # Retrocede sobre 'Z's (ya marcadas)
+}
+
+estado_inicial = 'q0'
+estado_aceptacion = 'q_acept'
+estado_rechazo = 'q_rech'
+
+encabezados = ['Paso', 'Estado' ,'Cinta', 'Cabeza', 'Lee', 'Escribe', 'Estado N', 'Direccion']
+
+# Probar con distintas palabras
+palabras = ["abc","aabccc","bbcc","aaabbbcccccc","aabcc","aabccccc","abcb"]
+for palabra in palabras:
+  print(f"Simulando {palabra}:")
+  resultados = simular_mt(palabra, transiciones)
+  ## print(resultados)
+  print(tabulate(resultados, headers=encabezados, tablefmt = "double_grid", numalign="center", stralign="center"))
+  siguiente = input('Siguiente')
+
+"""#####**Ejercicio 2 — Analizar el comportamiento del simulador ante bucles y rechazos**
+
+**Descripción del problema**  
+En una Máquina de Turing, si no hay transición definida para un cierto par $(q,a)$, la máquina puede:
+- detenerse y rechazar la palabra, o
+- quedar en un bucle infinito si hay transiciones cíclicas sin llegar a un estado final.
+
+Queremos mejorar el simulador de MT para:
+- detectar ciclos o bloqueos,
+- y tener una política clara para rechazar palabras cuando eso ocurre.
+
+**Objetivos**  
+- Observar cómo se comporta la máquina ante falta de transiciones.
+- Explorar casos de no aceptación por ciclo infinito.
+- Proponer una estrategia para detectar estos comportamientos.
+
+**Instrucciones**  
+1. Usá el simulador del ejemplo 0 como base.
+2. Definí una MT muy simple que entre en bucle con ciertas entradas.
+3. Implementá un contador de pasos (`max_pasos`) para frenar la simulación si se excede un número razonable.
+4. Al final, escribí una reflexión:
+ - ¿Qué sucede si la MT entra en un ciclo y nunca alcanza un estado final?
+ - ¿Cómo se puede detectar eso computacionalmente?
+ - ¿Cuál es la diferencia entre “rechazar por definición” y “rechazar por bucle”?
+
+**Espacio de respuesta**
+
+Si la maquina entra en un ciclo (con pasos > 1000 en el codigo de ejemplo), el sistema marca que entro en un bucle y cancela la ejecucion de la funcion. Significa que se realizaron mas de *`max_pasos`* iy no se ha alcanzado un estad de rechazo ni de aceptacion
+
+Podria modificarse la funcion para poder pasar ese valor como parametro (que n sea un numero fijo dentro del algoritmo).
+
+Un problema de esa implementacion puede ser que algoritmo *piense que entro en un bucle infinito*, cuando en realidad solo esta validando una palabra larga que le insume muchos pasos.
+
+Para evaluar eso, podría generarse un "Set", con una tupla que contenga el estado actual, la posicion de la cabeza, el valor de la cinta y la direccion en que se mueve, y un contador que lleve el control de cantidas de veces que el algoritmo ha "pasado" por esa combinacion de datos, comparandolo con el valor maximo permitido. Con esto evitariamos bucles de palabras muy largas o con muchos pasos. Sigue siendo un estimado
+
+Rechazar **por bucle** implica que se han realizado mas pasos de los que el limite del algoritmo permite. Rechazar **por definicion** significa que el sistema encontro una combinacion de estado/valor no definida o que la combinacion estado/valor lo ha llevado a un estado de rechazo
+
+**El algoritmo modificado quedaria algo como :**
+"""
+
+def simular_mt(cinta_str, transiciones, estado_inicial, estado_aceptacion, estado_rechazo):
+    tabla = []
+
+    cinta = list(cinta_str) + [' ']   # Para evitar los posibles problemas que se puede generar en el sector de codigo "cabeza = max(0, cabeza - 1)"
+    cabeza = 0                        # puede iniciarse cinta en cinta = [' '] + list(cinta_str) + [' '] y cabeza en 1
+    estado = estado_inicial
+    passos = 0
+    # Almacenar las configuraciones visitadas como tuplas (estado, tupla(cinta), cabeza, direccion)
+    # Usar tupla(cinta) porque las listas son mutables y no se pueden incluir directamente en un conjunto (podria ser tambien ''.join(cinta)).
+    visitados = set()
+
+    while estado != estado_aceptacion and estado != estado_rechazo:
+        # Verificar bucle por error de configuración
+        configuracion_actual = (estado, tuple(cinta), cabeza, direcao)
+        if current_configuration in visitados:
+            tabla.append([" ", "Bucle", "Detectado por configuración", "Abortando.", '', '', '', ''])
+            break
+        visitados.add(current_configuration)
+
+        if passos > 5000: # Aumentar el límite para cálculos muy largos pero válidos si fuera necesario
+            tabla.append([" ", "Bucle?", "Demasiados pasos", "Abortando.", '', '', '', ''])
+            break
+
+        simbolo = cinta[cabeza]
+        viejo_estado = estado
+        clave = (estado, simbolo)
+
+        if clave not in transiciones:
+            estado = estado_rechazo
+            break
+
+        novo_estado, novo_simbolo, direcao = transiciones[clave]
+        cinta_vieja = ''.join(cinta).rstrip()
+        cinta[cabeza] = novo_simbolo
+        estado = novo_estado
+        tabla.append([passos, viejo_estado, cinta_vieja, cabeza, simbolo, novo_simbolo, novo_estado, direcao])
+        passos += 1
+
+        if direcao == 'R':
+            cabeza += 1
+            if cabeza == len(cinta):
+                cinta.append(' ')
+        elif direcao == 'L':
+            cabeza = max(0, cabeza - 1)
+            # Hay que tener cuidado con esta seccion de codigo
+            # Si el algoritmo intenta encontrar el inicio de la cinta (llendo a la posicion -1)
+            # esta seccion puede generar que se entre en un loop
+
+    resultado = " Aceptada" if estado == estado_aceptacion else " Rechazada"
+    tabla.append(['Resultado:', '', resultado, '', '', '', '', ''])
+    return tabla
+
+"""#####**Ejercicio 3 (difícil) — Modificá la MT para aceptar $L=\{1^n0^n1^n\}$**
+
+**Descripción del problema**  
+La máquina del ejemplo anterior aceptaba palabras del tipo $1^n0^n1^n$.  
+Ahora queremos modificarla para que también exija una cantidad igual de `1`s al final.  
+Ejemplos válidos: `"101"`, `"110011"`, `"111000111"`  
+Ejemplos inválidos: `"100"`, `"1100"`, `"1110001"`
+
+**Objetivos**
+- Extender la lógica de las transiciones de una MT ya existente.
+- Realizar un emparejamiento doble: primero `1` con `0`, luego los `1` finales con los símbolos marcados.
+
+**Instrucciones**  
+1. Usá el código del ejemplo anterior como base.
+2. Agregá nuevas transiciones que permitan:
+ - después de emparejar todos los `1` y `0`,
+ - pasar a una fase nueva donde se busquen y marquen los `1` finales.
+3. Asegurate de que la máquina:
+ - recorra correctamente la cinta en ambas direcciones,
+ - rechace si los grupos no tienen cantidades iguales.
+
+**Pruebas sugeridas**  
+```python
+simular_mt("101")         # ✅
+simular_mt("110011")      # ✅
+simular_mt("111000111")   # ✅
+simular_mt("100")         # ❌
+simular_mt("1110001")     # ❌
+```
+
+**Aviso:**  
+¡Tu análisis es muy valioso! Aunque el diseño no esté perfecto aún, este tipo de exploraciones nos muestran lo complejas y poderosas que son las máquinas de Turing, y cuán importante es razonar con precisión al implementar un algoritmo.
+"""
+
+from tabulate import tabulate
+
+def simular_mt(cinta_str, transiciones):
+    tabla = []
+
+    cinta = list(cinta_str) + [' ']
+    cabeza = 0
+    estado = estado_inicial
+    passos = 0
+    visitados = set()
+
+    while estado != estado_aceptacion and estado != estado_rechazo:
+        if passos > 1000:
+            tabla.append([" ","Bucle", "detectado","Abortando.", '','',''])
+            break
+        simbolo = cinta[cabeza]
+        viejo_estado = estado
+        clave = (estado, simbolo)
+
+        if clave not in transiciones:
+            estado = estado_rechazo
+            break
+        novo_estado, novo_simbolo, direcao = transiciones[clave]
+        cinta_vieja = ''.join(cinta)
+        cinta[cabeza] = novo_simbolo
+        estado = novo_estado
+        tabla.append([passos,viejo_estado, cinta_vieja,cabeza,simbolo,novo_simbolo,novo_estado,direcao])
+        passos += 1
+
+        if direcao == 'R':
+            cabeza += 1
+            if cabeza == len(cinta):
+                cinta.append(' ')
+        elif direcao == 'L':
+            cabeza = max(0, cabeza - 1)
+
+
+    resultado = " Aceptada" if estado == estado_aceptacion else " Rechazada"
+    tabla.append(['Resultado:' ,'',resultado,'','','','',''])
+    return tabla
+
+
+transiciones = {
+    # q0: Estado inicial. Busca el primer '1' no marcado del primer bloque
+    # Si encuentra un '1', lo marca y se mueve a la derecha para buscar un '0' por q1
+    ('q0', '1'): ('q1', 'X', 'R'), # Marca '1' con 'X', va a q1 para buscar '0'
+    ('q0', 'X'): ('q0', 'X', 'R'), # Ignora 'X' (ya marcado)
+    ('q0', 'Y'): ('q0', 'Y', 'R'), # Ignora 'Y' (ya marcado)
+    ('q0', 'Z'): ('q0', 'Z', 'R'), # Ignora 'Z' (ya marcado)
+    ('q0', '0'): ('q_rech', '0', 'R'), # Si encuentra '0' antes de '1', rechaza (formato incorrecto)
+    ('q0', ' '): ('q_acept', ' ', 'R'), # Si encuentra un espacio, ya verifico toda la cinta
+
+    # q1: Busca el primer '0' no marcado del segundo bloque
+    # Si encuentra un '0', lo marca y se mueve a la derecha para buscar un '1' por q2
+    ('q1', '1'): ('q1', '1', 'R'), # Salta los '1's restantes del primer bloque
+    ('q1', 'Y'): ('q1', 'Y', 'R'), # Salta los 'Y's (ya marcados '0's)
+    ('q1', '0'): ('q2', 'Y', 'R'), # Marca '0' con 'Y', va a q2 para buscar '1' del tercer bloque
+
+    # q2: Busca el primer '1' no marcado del tercer bloque
+    # Si encuentra un '1', lo marca y se mueve a la izquierda para regresar al inicio.
+    ('q2', '0'): ('q2', '0', 'R'), # Salta los '0's restantes del segundo bloque
+    ('q2', 'Y'): ('q2', 'Y', 'R'), # Salta los 'Y's (ya marcados '0's)
+    ('q2', 'Z'): ('q2', 'Z', 'R'), # Salta los 'Z's (ya marcados '1's)
+    ('q2', '1'): ('q3', 'Z', 'L'), # Marca '1' con 'Z', va a q3 para retroceder
+
+    # q3: Retrocede buscando la primer X recorriendo la cinta hacia la izquierda
+    # Una vez en el inicio, se mueve a la derecha y vuelve al estado q0 para procesar el siguiente ciclo.
+    ('q3', '1'): ('q3', '1', 'L'), # Salta '1's
+    ('q3', '0'): ('q3', '0', 'L'), # Salta '0's
+    ('q3', 'X'): ('q0', 'X', 'R'), # encuenta 'X' (el ultimo 1 procesado) y va a q0 moviendose a la izquierda
+    ('q3', 'Y'): ('q3', 'Y', 'L'), # Salta 'Y' (marcador de '0')
+    ('q3', 'Z'): ('q3', 'Z', 'L'), # Salta 'Z' (marcador de '1')
+}
+
+estado_inicial = 'q0'
+estado_aceptacion = 'q_acept'
+estado_rechazo = 'q_rech'
+
+encabezados = ['Paso', 'Estado' ,'Cinta', 'Cabeza', 'Lee', 'Escribe', 'Estado N', 'Direccion']
+
+# Probar con distintas palabras
+palabras = ['101', '110011','111000111', '100','1110001']
+for palabra in palabras:
+  print(f"Simulando {palabra}:")
+  resultados = simular_mt(palabra, transiciones)
+  ## print(resultados)
+  print(tabulate(resultados, headers=encabezados, tablefmt = "double_grid", numalign="center", stralign="center"))
+  seguir = input('Siguiente')
