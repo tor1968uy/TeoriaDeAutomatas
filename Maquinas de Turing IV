@@ -1,0 +1,231 @@
+#### **Construcción de máquinas de Turing más avanzadas**
+
+Hasta ahora hemos trabajado con Máquinas de Turing que reconocen lenguajes formales conocidos, como:
+
+- $L=\{a^n\}$
+- $L=\{a^nb^n\}$
+- $L=\{a^nb^nc^n\}$
+- $L=\{w\in\{0,1\}^*\mid w=w^R\}$
+
+Estas máquinas son excelentes para entender cómo una Máquina de Turing puede simular autómatas de pila y resolver problemas no regulares. Sin embargo, ¡la potencia de las Máquinas de Turing va mucho más allá!
+
+Hoy vamos a practicar con **Máquinas de Turing diseñadas para realizar tareas computacionales concretas**, más cercanas a operaciones que podríamos encontrar en procesadores o sistemas formales simples.
+
+##### **Ejemplo 0: Máquina de Turing para $L =\{a^n ~ |~ n \geqslant 0\}$.**
+
+**Descripción del problema:**  
+Queremos construir una máquina de Turing que acepte todas las palabras formadas únicamente por letras `a`, siempre que haya al menos una.
+
+**Objetivo**
+- Marcar los símbolos a con X para llevar control.
+- Avanzar hacia la derecha hasta el espacio en blanco.
+- Rechazar si encuentra algún símbolo no válido.
+- Rechazar si la cinta está vacía.
+"""
+
+# Máquina de Turing para L = { a^n | n ≥ 0 }
+
+transiciones = {
+    ('q0', 'a'): ('q0', 'X', 'R'),
+    ('q0', ' '): ('q_acept', ' ', 'R'),
+}
+
+estado_inicial = 'q0'
+estado_aceptacion = 'q_acept'
+estado_rechazo = 'q_rech'
+
+def simular_mt(palabra):
+    cinta = list(palabra) + [' ']  # agregamos espacio en blanco
+    cabeza = 0
+    estado = estado_inicial
+    pasos = 0
+
+    print(f"{'Paso':<5} {'Estado':<10} {'Cinta':<30} {'Cabeza'}")
+    while estado != estado_aceptacion and estado != estado_rechazo:
+        simbolo = cinta[cabeza]
+        clave = (estado, simbolo)
+
+        if clave not in transiciones:
+            estado = estado_rechazo
+            break
+
+        nuevo_estado, nuevo_simbolo, direccion = transiciones[clave]
+        cinta[cabeza] = nuevo_simbolo
+        estado = nuevo_estado
+
+        print(f"{pasos:<5} {estado:<10} {''.join(cinta):<30} {cabeza}")
+        pasos += 1
+
+        if direccion == 'R':
+            cabeza += 1
+            if cabeza == len(cinta):
+                cinta.append(' ')
+        elif direccion == 'L':
+            cabeza = max(0, cabeza - 1)
+
+    print("\nResultado:", "✅ Aceptada" if estado == estado_aceptacion else "❌ Rechazada")
+
+simular_mt("a")     # ✅
+simular_mt("aaa")   # ✅
+simular_mt("")      # ❌
+simular_mt("aab")   # ❌
+
+"""##### **Ejercicio práctico: Explorá una Máquina de Turing más avanzada**
+
+**Instrucciones:**  
+Elegí una de las siguientes funcionalidades (u otra similar que te parezca interesante) y diseñá una Máquina de Turing que la implemente:
+
+- ✅ **Clonar** una palabra del alfabeto `{A, B, C}` a la derecha de un separador (por ejemplo, `b`):  
+  Ejemplo: `ACBA` → `ACBAbACBA` → ✅ (El proceso no destruye la palabra original)
+
+- ✅ **Reemplazar** los primeros `n` símbolos `A` por `B` si hay `n` símbolos `1` antes:  
+  Ejemplo: `1ACBA` → `1BCBA`→ ✅, `11ACBA` → `11BCBB` → ✅
+
+- ✅ **Comparar** dos cadenas separadas por `#` y verificar si son iguales:  
+  Ejemplo: `A#BA` → ❌, `BA#BA` → ✅
+
+- ✅ **Calcular el sucesor binario** de una cadena (puede comenzar con `$` si necesitás espacio extra a la izquierda):  
+  Ejemplo: `$011` → `$100` → ✅, `$11` → `100` → ✅
+
+- ✅ **Shifting over**: Desplazar todo el contenido de la cinta una celda a la derecha, dejando un espacio libre en la posición actual de la cabeza.  
+  *Sugerencia:* marcá la celda original con un símbolo especial para regresar luego.
+
+**¿Qué debés entregar?**  
+1.  **Importancia del algoritmo:**  
+   Explicá brevemente por qué esta funcionalidad que elegiste es interesante o útil desde el punto de vista computacional.
+   
+2. **Idea general de la implementación:**  
+   Describí con tus palabras cuál es la lógica que sigue tu máquina (qué pasos realiza y cómo usa la cinta, símbolos y movimientos para alcanzar su objetivo).
+
+3.  **Descripción completa** de la máquina:
+   - Alfabeto de entrada
+   - Alfabeto de la cinta
+   - Conjunto de estados
+   - Estado inicial, de aceptación y de rechazo
+   - Tabla de transiciones  
+     (puede ser en forma de diccionario Python o tabla LaTeX/Markdown)
+
+4. **Implementación en Python:**  
+   Usá o adaptá la función `simular_mt()` vista en clase para modelar tu máquina.
+
+5. **Pruebas con palabras de entrada:**  
+   Mostrá al menos una palabra aceptada y una palabra rechazada, y justificá el resultado en cada caso.
+
+---
+*Recordá que podés usar como referencia los ejemplos vistos en la clase anterior, y adaptar su estructura para tu propia máquina.*
+
+**Importancia del algoritmo:**
+El algoritmo para obtener el siguiente número binario es útil desde el punto de vista computacional porque simula una operación aritmética básica: la suma.
+
+Esta operación es fundamental en cualquier sistema de cómputo, ya que sirve como base para operaciones más complejas como multiplicación, comparación, y manipulación de datos binarios a nivel de hardware.
+
+**Idea general de la implementación:**
+
+1) El estado inicial recorre la cinta hacia la derecha hasta el final
+
+2) El siguiente paso es si encuentra un 1, cambiar 1 por  0 y pasar a un estado que "arrastre el sobrante", si el valor era 0 ponerlo en 1 y pasar al siguiente estado que "no arrastra" sobrante moviendose a la izquierda
+
+3)Si estoy en el estado que "no arrastra", si encuentro un 1 o un 0 dejo el valor anterior y sigo hacia la izquierda
+
+4)Si estoy en el estado que "arrastra", si encuentro un 1  lo pongo en 0 , se mueve a la izquierda y sigue arrastrando , si encuentra un 0 lo pone en uno y pasa a un estado de "no arrastre" moviendose a la izquierda.
+
+5) cuando llega al comienzo de la cinta (un espacio en blanco) si vengo de un estado de arrastre lo pongo en 1 y si estoy en un estado de "no arrastre" queda vacio y el algoritmo termina
+
+**Descripción completa de la máquina:**
+
+Alfabeto de entrada {'0','1'}
+
+Alfabeto de la cinta {'0','1',' '}
+
+Conjunto de estados {q0, q1, q2, q3, q_acept, q_rech}
+
+Estado inicial **q0**, de aceptación **q_acept** y de rechazo **q_rech** (el estado de rechazo solo ocurre porque no hay una transciion definida, en particular por un simbolo que no pertenece al alfabeto)
+
+    **Tabla de transiciones**
+        transiciones = {
+                        ('q0', '0'): ('q0', '0', 'R'),
+                        ('q0', '1'): ('q0', '1', 'R'),
+                        ('q0', ' '): ('q1', ' ', 'L'),
+
+                        ('q1', '0'): ('q2', '1', 'L'),
+                        ('q1', '1'): ('q3', '0', 'L'),
+                        ('q1', ' '): ('qacept', ' ', 'R'),
+
+                        ('q2', '0'): ('q2', '0', 'L'),
+                        ('q2', '1'): ('q2', '1', 'L'),
+                        ('q2', ' '): ('qacept', ' ', 'R'),
+
+                        ('q3', '0'): ('q2', '1', 'L'),
+                        ('q3', '1'): ('q3', '0', 'L'),
+                        ('q3', ' '): ('qacept', '1','R')
+                      }
+
+**Implementación en Python:**
+"""
+
+# Máquina de Turing para  Calcular el sucesor binario
+
+transiciones = {
+    ('q0', '0'): ('q0', '0', 'R'),
+    ('q0', '1'): ('q0', '1', 'R'),
+    ('q0', ' '): ('q1', ' ', 'L'),
+
+    ('q1', '0'): ('q2', '1', 'L'),
+    ('q1', '1'): ('q3', '0', 'L'),
+    ('q1', ' '): ('q_acept', ' ', 'R'),
+
+    ('q2', '0'): ('q2', '0', 'L'),
+    ('q2', '1'): ('q2', '1', 'L'),
+    ('q2', ' '): ('q_acept', ' ', 'R'),
+
+    ('q3', '0'): ('q2', '1', 'L'),
+    ('q3', '1'): ('q3', '0', 'L'),
+    ('q3', ' '): ('q_acept', '1','R')
+
+}
+
+estado_inicial = 'q0'
+estado_aceptacion = 'q_acept'
+estado_rechazo = 'q_rech'
+
+def simular_mt(palabra):
+    cinta =  [' '] +list(palabra) + [' ']  # agregamos espacio en blanco
+    cabeza = 1
+    estado = estado_inicial
+    pasos = 0
+
+    #print(f"{'Paso':<5} {'Estado':<10} {'Cinta':<30} {'Cabeza'}")
+    while estado != estado_aceptacion and estado != estado_rechazo:
+        simbolo = cinta[cabeza]
+        clave = (estado, simbolo)
+
+        if clave not in transiciones:
+            estado = estado_rechazo
+            break
+
+        nuevo_estado, nuevo_simbolo, direccion = transiciones[clave]
+        cinta[cabeza] = nuevo_simbolo
+        estado = nuevo_estado
+
+        #print(f"{pasos:<5} {estado:<10} {''.join(cinta):<30} {cabeza}")
+        pasos += 1
+
+        if direccion == 'R':
+            cabeza += 1
+            if cabeza == len(cinta):
+                cinta.append(' ')
+        elif direccion == 'L':
+            cabeza = max(0, cabeza - 1)
+    nuevapalabra = ''.join(cinta[0:-1])
+    if estado == estado_aceptacion:
+        print(f"\nResultado Sucesor binario de {palabra} ==> {nuevapalabra} ✅ Aceptada")
+    else:
+        print(f"\nResultado Sucesor binario de {palabra}  ❌ Rechazada")
+
+simular_mt("100")
+simular_mt("110011")
+simular_mt("11")
+simular_mt("12101")
+simular_mt("1101")
+simular_mt("1111")
+simular_mt("0101")
