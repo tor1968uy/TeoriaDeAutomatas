@@ -1,0 +1,123 @@
+def pda_wwr(palabra):
+    pila = []
+    estado = 'q1'
+    pointer = 0  # Índice para recorrer la palabra
+
+    # Transición inicial (q1, ε, ε) → (q2, $)
+    clave = (estado, '', '')
+    if clave in transiciones_pda:
+        estado, simbolo_pila = transiciones_pda[clave]
+        pila.append(simbolo_pila)
+
+    # Fase de apilamiento (q2)
+    while pointer < len(palabra) // 2:
+        simbolo = palabra[pointer]
+        pointer += 1
+        clave = (estado, simbolo, '')
+        if clave in transiciones_pda:
+            estado, simbolo_pila = transiciones_pda[clave]
+            pila.append(simbolo_pila)
+        else:
+            return False  # Transición inválida
+
+    # Transición no determinista (q2, ε, ε) → (q3, ε)
+    clave = (estado, '', '')
+    if clave in transiciones_pda:
+        estado, _ = transiciones_pda[clave]
+
+    # Si longitud impar, salta el símbolo del medio
+    if len(palabra) % 2 != 0:
+        pointer += 1
+
+    # Fase de desapilamiento (q3)
+    while pointer < len(palabra):
+        simbolo = palabra[pointer]
+        pointer += 1
+
+        if not pila:
+            return False
+
+        tope = pila[-1]
+        clave = (estado, simbolo, tope)
+        if clave in transiciones_pda:
+            estado, _ = transiciones_pda[clave]
+            pila.pop()
+        else:
+            return False  # Error de pila o transición
+
+    # Transición final: (q3, ε, $) → (q4, ε)
+    if pila and pila[-1] == '$':
+        clave = (estado, '', '$')
+        if clave in transiciones_pda:
+            estado, _ = transiciones_pda[clave]
+            pila.pop()
+
+    # Aceptamos si llegamos a q4 y la pila está vacía
+    return estado == 'q4' and not pila
+
+transiciones_pda = {
+    ('q1', '', ''): ('q2', '$'),
+    ('q2', '0', ''): ('q2', '0'),
+    ('q2', '1', ''): ('q2', '1'),
+    ('q2', '', ''): ('q3', ''),
+    ('q3', '0', '0'): ('q3', ''),
+    ('q3', '1', '1'): ('q3', ''),
+    ('q3', '', '$'): ('q4', '')
+}
+
+lista_test = ["0110", "1010", "010", "1001",
+    "0110",     # palíndromo
+    "10101",    # palíndromo
+    "1001",     # palíndromo
+    "111111",   # palíndromo
+    "010",      # palíndromo
+    "0000",     # palíndromo
+    "00100",    # palíndromo
+    "100001",   # palíndromo
+    "11011",    # palíndromo
+    "01110",    # palíndromo
+    "1",        # palíndromo (pero evitamos de 1 sola longitud)
+    "101",      # palíndromo
+    "111",      # palíndromo
+    "0111110",  # palíndromo
+    "0011100",  # palíndromo
+
+    # No palíndromos (35 restantes)
+    "1100",
+    "10110",
+    "001",
+    "1000",
+    "11010",
+    "00110",
+    "0101",
+    "01101",
+    "10010",
+    "11100",
+    "1011",
+    "0001",
+    "01100",
+    "11001",
+    "10011",
+    "00101",
+    "10100",
+    "11011",
+    "11110",
+    "10001",
+    "00010",
+    "01010",
+    "10110",
+    "01111",
+    "10000",
+    "00111",
+    "11101",
+    "01000",
+    "11010",
+    "01101",
+    "00100",
+    "11110",
+    "10010",
+    "00011",
+    "10101"
+]
+for palabra in lista_test:
+    print(f"{palabra}: {pda_wwr(palabra)}")
