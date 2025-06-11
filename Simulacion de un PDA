@@ -1,0 +1,50 @@
+##### **Ejemplo 1: Simulación de un PDA para $L = \{a^nb^n | n\geqslant 1 \}$**
+
+**Descripción del problema:**
+
+Queremos simular un autómata de pila (PDA) que acepta palabras con igual número de letras $a$ seguidas por igual número de letras $b$, sin alternancia.
+
+**Objetivo:**
+- Implementar un PDA simple que utilice pila.
+- Reconocer palabras del lenguaje $\{ a^nb^b | n\geqslant 1\}$.
+- Usar una pila para contar la cantidad de $a$ y verificar que se correspondan con la misma cantidad de $b$.
+- Implementar esta lógica en Python y verificar la aceptación por pila vacía y transición de estados.
+
+**Entradas:**
+- Una palabra sobre el alfabeto $\{a,b \}$.
+
+**Salida:**
+- `True` si la palabra es aceptada por el PDA, `False` en caso contrario.
+"""
+
+def pda_an_bn(palabra):
+    pila = []           # Inicializamos la pila vacía
+    estado = 'q0'       # Estado inicial
+
+    for simbolo in palabra:
+        if estado == 'q0':
+            if simbolo == 'a':
+                pila.append('A')  # Empilamos un símbolo por cada 'a'
+            elif simbolo == 'b':
+                estado = 'q1'     # Cambiamos de estado al encontrar el primer 'b'
+                if not pila:      # Si la pila está vacía antes de empezar a desapilar, error
+                    return False
+                pila.pop()        # Desapilamos por cada 'b'
+            else:
+                return False      # Si aparece un símbolo fuera del alfabeto
+        elif estado == 'q1':
+            if simbolo == 'b':
+                if not pila:
+                    return False  # No hay más 'a' para emparejar con este 'b'
+                pila.pop()        # Desapilamos un símbolo por cada 'b'
+            else:
+                return False      # No se permite volver a ver 'a' después del cambio de estado
+
+    # Al final, aceptamos si estamos en estado q1 y la pila está vacía
+    return estado == 'q1' and not pila
+
+
+# Ejemplo de uso
+palabras = ["aaabbb", "aabbb", "aabb"]
+for palabra in palabras:
+    print(f"{palabra}: {pda_an_bn(palabra)}")
