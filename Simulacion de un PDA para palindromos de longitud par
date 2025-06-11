@@ -1,0 +1,117 @@
+"""##### **Ejercicio 1: Simulación de un PDA para palíndromos de longitud par**
+
+**Descripción del problema:**
+
+Queremos simular un autómata de pila (PDA) que acepte el lenguaje
+$$L=\{ww^r| w\in \{0,1\}, w^r \text{ es la reversa exacta de } w\}$$
+
+**Objetivo:**
+
+Implementar un PDA que:
+- Empila los símbolos de la primera mitad de la palabra.
+- Luego, desapila y compara con la segunda mitad.
+- Acepta si la pila queda vacía y se alcanza el estado final.
+
+**Definición del PDA:**
+- Estados: $Q= \{q_1, q_2, q_3, q_4 \}$
+- Alfabeto de entrada: $\Sigma = \{ 0,1\}$
+- Alfabeto de pila: $\Gamma =\{0,1,\$ \}$
+- Estado inicial: $q_1$
+- Símbolo inicial de pila: $\varepsilon$
+- Estado final: $q_4$
+- Aceptación: por estado final o pila vacía
+
+**Transiciones:**
+$$(q_1, \varepsilon,\varepsilon) \to (q_2, $)$$
+$$(q_2, 0,\varepsilon) \to (q_2, 0)$$
+$$(q_2, 1,\varepsilon) \to (q_2, 1)$$
+$$(q_2, \varepsilon,\varepsilon) \to (q_3, \varepsilon)$$
+$$(q_3, 0, 0) \to (q_3, \varepsilon)$$
+$$(q_3, 1, 1) \to (q_3, \varepsilon)$$
+$$(q_3, \varepsilon, $) \to (q_4, \varepsilon)$$
+
+**Instrucciones:**
+- Implementa este PDA en Python utilizando una pila (lista).
+- Simula el comportamiento paso a paso, diferenciando claramente las fases de apilamiento y desapilamiento.
+- Verifica con ejemplos como: `"0110"`, `"1010"`, `"010"`, `"1001"` y otros.
+"""
+
+
+
+"""##### **Ejemplo 2 - Simulación de un PDA usando transiciones declaradas (estilo NFA)**
+
+**Descripción del problema:**
+
+Queremos construir un simulador general de autómatas de pila no deterministas (PDA), donde las transiciones estén definidas por una estructura externa (diccionario), separando la lógica del autómata de la simulación.
+
+Simularemos un PDA que acepta el lenguaje:
+$$ L = \{ a^nb^n | n\geqslant 1  \}. $$
+
+**Definición del PDA:**
+- Estados: $\{q_0,q_1\}$
+- Alfabeto de entrada: $\{a,b\}$
+- Alfabeto de pila: $\{A\}$
+- Estado inicial: $q_0$
+- Estados de aceptación: $\{q_1\}$
+- Aceptación por pila vacía
+
+**Transiciones:**
+$$(q_0, a,\varepsilon) \to (q_0, A)$$
+$$(q_0, b,A) \to (q_1, \varepsilon)$$
+$$(q_1, b,A) \to (q_1, \varepsilon)$$
+
+**🧠 Objetivo:**
+- Representar las transiciones como diccionario.
+- Simular el PDA con pila.
+- Explorar múltiples caminos posibles (no determinismo).
+- Aceptar la palabra si al menos una ejecución termina con pila vacía en estado final.
+"""
+
+def simular_pda(est_inicial, est_aceptacion, transiciones, palabra):
+    # Cada configuración: (estado, índice de lectura, pila)
+    configuraciones = [(est_inicial, 0, [])]
+
+    while configuraciones:
+        estado, i, pila = configuraciones.pop()
+
+        if i == len(palabra) and not pila and estado in est_aceptacion:
+            return True  # Aceptación por pila vacía en estado final
+
+        simbolo = palabra[i] if i < len(palabra) else None
+        tope = pila[-1] if pila else None
+
+        # Buscar todas las transiciones posibles
+        claves = [
+            (estado, simbolo, tope),
+            (estado, simbolo, None),
+            (estado, None, tope),
+            (estado, None, None)
+        ]
+
+        for clave in claves:
+            if clave in transiciones:
+                for (nuevo_estado, accion_pila) in transiciones[clave]:
+                    nueva_pila = pila.copy()
+                    if tope and clave[2] == tope:
+                        nueva_pila.pop()
+                    if accion_pila:
+                        nueva_pila.append(accion_pila)
+                    nuevo_i = i + 1 if clave[1] is not None else i
+                    configuraciones.append((nuevo_estado, nuevo_i, nueva_pila))
+
+    return False
+
+# Definición del autómata:
+transiciones = {
+    ("q0", "a", None): [("q0", "A")],
+    ("q0", "b", "A"): [("q1", None)],
+    ("q1", "b", "A"): [("q1", None)],
+}
+
+estado_inicial = "q0"
+estados_aceptacion = {"q1"}
+
+palabras = ["ab", "aabb", "aaabbb", "aab", "abb"]
+
+for w in palabras:
+    print(f"{w} -> {simular_pda(estado_inicial, estados_aceptacion, transiciones, w)}")
